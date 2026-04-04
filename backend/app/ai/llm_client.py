@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any
 logger = logging.getLogger(__name__)
 
 # Basic Provider URLs
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 CEREBRAS_API_URL = "https://api.cerebras.ai/v1/chat/completions"
 
@@ -38,7 +38,7 @@ def _call_gemini(system_prompt: str, user_prompt: str, temperature: float, respo
     if not api_key:
         raise ValueError("GEMINI_API_KEY is not set.")
         
-    url = f"{GEMINI_API_URL}?key={api_key}"
+    url = GEMINI_API_URL
     
     payload = {
         "systemInstruction": {
@@ -56,8 +56,17 @@ def _call_gemini(system_prompt: str, user_prompt: str, temperature: float, respo
     if response_format and response_format.get("type") == "json_object":
         payload["generationConfig"]["responseMimeType"] = "application/json"
     
-    response = requests.post(url, headers={"Content-Type": "application/json"}, json=payload, timeout=60)
-    response.raise_for_status()
+    headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": api_key
+    }
+    
+    response = requests.post(url, headers=headers, json=payload, timeout=60)
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"Gemini HTTP Error: {response.status_code} - {response.text}")
+        raise RuntimeError(f"Gemini API Error: {response.status_code}") from e
     data = response.json()
     
     try:
@@ -100,8 +109,8 @@ def _call_groq(system_prompt: str, user_prompt: str, temperature: float, respons
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
         raise ValueError("GROQ_API_KEY is not set.")
-    # Assuming llama3-8b-8192 or llama3-70b-8192
-    return _call_openai_compatible(GROQ_API_URL, api_key, "llama3-70b-8192", system_prompt, user_prompt, temperature, response_format, "groq")
+    # Assuming llama-3.3-70b-versatile
+    return _call_openai_compatible(GROQ_API_URL, api_key, "llama-3.3-70b-versatile", system_prompt, user_prompt, temperature, response_format, "groq")
 
 def _call_cerebras(system_prompt: str, user_prompt: str, temperature: float, response_format: Optional[Dict[str, Any]]) -> dict:
     api_key = os.environ.get("CEREBRAS_API_KEY")

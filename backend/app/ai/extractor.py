@@ -42,13 +42,13 @@ Schema per object:
     "step_therapy_required": "boolean | null",
     "step_therapy_details": "array of strings | null",
     "site_of_care": "array of ('hospital_outpatient' | 'physician_office' | 'home_infusion') | null",
-    "effective_date": "string | null"
+    "effective_date": "string (format strictly as ISO YYYY-MM-DD) | null"
 }}
 
 Crucial Constraints:
 1. `coverage_status` MUST strictly be one of: 'covered', 'not_covered', 'conditional', or null.
 2. `pa_required` and `step_therapy_required` are distinct and separate. Evaluate them independently.
-3. Check headers for `effective_date`.
+3. Check headers for `effective_date`. If found, ALWAYS normalize the output to ISO `YYYY-MM-DD` format.
 4. Output valid JSON ONLY. No preamble, no explanation, no markdown ticks.
 """
 
