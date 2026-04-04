@@ -1,30 +1,36 @@
 from fastapi import APIRouter, HTTPException
 from app.schemas import AppealRequest, AppealResponse
-from app.services import p1_generate_appeal_letter
+from app.services import p1_generate_appeal_letter, p2_search_embeddings
 
 router = APIRouter(prefix="/appeal", tags=["appeal"])
 
 @router.post("", response_model=AppealResponse)
 async def generate_appeal(req: AppealRequest):
     """
-    Drive backend-to-frontend workflow for appeal reasoning.
+    Drive backend-to-frontend workflow for appeal reasoning based on RAG.
     """
     if not req.drug or not req.payer or not req.denial_reason:
         raise HTTPException(status_code=400, detail="Drug, payer, and denial_reason are required.")
         
     try:
-        # Context combining
-        full_context = f"Context: {req.extra_context}" if req.extra_context else "No extra context."
+        # Construct search query to find the exact rules violated
+        search_query = f"{req.drug} {req.payer} denial for: {req.denial_reason}"
+        if req.extra_context:
+            search_query += f" Context: {req.extra_context}"
+            
+        # Retrieve relevant chunks from P2 embeddings
+        retrieved_items = p2_search_embeddings(search_query, top_k=3)
+        
+        # Build payload for P1
+        real_chunks = "\n".join([item["chunk"] for item in retrieved_items])
+        citations = [item["citation"] for item in retrieved_items if "citation" in item]
         
         # Call P1
         draft = p1_generate_appeal_letter(
             drug=req.drug, 
             denial_reason=req.denial_reason, 
-            context=full_context
+            context=real_chunks
         )
-        
-        # We dummy out citations for the stub
-        citations = ["section_prior_auth", "clinical_guideline_page_4"]
         
         return AppealResponse(
             appeal_draft=draft,

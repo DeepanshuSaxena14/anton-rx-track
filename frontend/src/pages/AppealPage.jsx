@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiClient } from '../apiClient';
 
 const AppealPage = () => {
   const [formData, setFormData] = useState({
@@ -24,19 +25,11 @@ const AppealPage = () => {
     setResult(null);
 
     try {
-      // Assuming FastAPI is running locally on port 8000 for the demo
-      const res = await fetch('http://localhost:8000/appeal', {
+      const data = await apiClient('/appeal', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
 
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.detail || 'Failed to generate appeal');
-      }
-
-      const data = await res.json();
       setResult(data);
     } catch (err) {
       setError(err.message);

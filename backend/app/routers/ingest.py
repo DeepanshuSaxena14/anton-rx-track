@@ -11,7 +11,8 @@ from app.services import (
     p1_generate_embeddings,
     p2_store_embeddings,
     p1_compute_score,
-    p2_store_score
+    p2_store_score,
+    p2_store_version
 )
 
 router = APIRouter(prefix="/ingest", tags=["ingest"])
@@ -56,13 +57,16 @@ async def ingest_pdf(file: UploadFile = File(...)):
         # 6. Insert policy records via P2 policy helpers (DB does dedup)
         record_ids = p2_store_policies(validated_policies)
         
-        # 7. Generate embeddings via P1 embedder
+        # 7. Insert version tracking via P2
+        p2_store_version(record_ids)
+        
+        # 8. Generate embeddings via P1 embedder
         embeddings = p1_generate_embeddings(chunks)
         
-        # 8. Store embeddings via P2 helper
+        # 9. Store embeddings via P2 helper
         p2_store_embeddings(record_ids, embeddings)
         
-        # 9. Compute & store scores contextually
+        # 10. Compute & 11. store scores contextually
         for i, policy in enumerate(validated_policies):
             score = p1_compute_score(policy)
             if i < len(record_ids):

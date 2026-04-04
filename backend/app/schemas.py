@@ -1,20 +1,22 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Dict, Any
 
-# 12-Field Core Model
+# 12-Field Core Model enforcing exact types
 class PolicyData(BaseModel):
+    model_config = ConfigDict(extra='forbid') # Reject hallucinated fields
+
     drug_name: Optional[str] = None
     brand_name: Optional[str] = None
     hcpcs_code: Optional[str] = None
     payer: Optional[str] = None
     coverage_status: Optional[str] = None
-    covered_indications: Optional[str] = None
+    covered_indications: Optional[List[str]] = None
     pa_required: Optional[bool] = None
-    pa_criteria: Optional[str] = None
+    pa_criteria: Optional[List[str]] = None
     step_therapy_required: Optional[bool] = None
     step_therapy_details: Optional[str] = None
-    site_of_care: Optional[str] = None
-    effective_date: Optional[str] = None
+    site_of_care: Optional[List[str]] = None
+    effective_date: Optional[str] = Field(None, description="ISO Format Date String")
 
 # Ingest Route
 class IngestResponse(BaseModel):

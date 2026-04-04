@@ -15,21 +15,21 @@ async def get_scores(
         raise HTTPException(status_code=400, detail="Must provide drug_name.")
         
     try:
+        # Fetch rankings from P2 and return sorted leaderboard
         raw_rankings = p2_fetch_rankings(drug=drug_name)
         
-        # Sort them descending (highest score = most restrictive usually)
         sorted_rankings = sorted(
             raw_rankings, 
-            key=lambda k: k.get("score", 0.0), 
+            key=lambda k: float(k.get("score", 0.0)) if isinstance(k, dict) else 0.0, 
             reverse=True
         )
         
         payer_scores = []
         for r in sorted_rankings:
             payer_scores.append(PayerScore(
-                payer=r.get("payer", "Unknown"),
-                score=r.get("score", 0.0),
-                reason=r.get("reason", "No reason provided")
+                payer=r.get("payer", "Unknown") if isinstance(r, dict) else "Unknown",
+                score=float(r.get("score", 0.0)) if isinstance(r, dict) else 0.0,
+                reason=r.get("reason", "No reason provided") if isinstance(r, dict) else ""
             ))
             
         return ScoresResponse(drug_name=drug_name, scores=payer_scores)

@@ -51,20 +51,32 @@ def p2_store_policies(policies: List[PolicyData]) -> List[str]:
     """(P2 Dummy) Inserts policies. Handles dedup. Returns list of record IDs."""
     return ["pol_12345"]
 
+def p2_store_version(record_ids: List[str]):
+    """(P2 Dummy) Inserts tracking versions for historical comparison."""
+    pass
+
 def p2_store_embeddings(record_ids: List[str], chunk_embeddings: List[List[float]]):
     """(P2 Dummy) Stores vector embeddings tied to policy records."""
     pass
+
+def p2_search_embeddings(query: str, top_k: int = 5) -> List[Dict]:
+    """(P2 Dummy) Performs vector search and returns literal chunks + citations."""
+    return [{"chunk": "Requires PA.", "citation": "doc_123#page1"}]
+
+def p2_normalize_policies(policies: List[PolicyData]) -> List[PolicyData]:
+    """(P2 Dummy) Normalizes side-by-side data."""
+    return policies
 
 def p2_store_score(record_id: str, score: float):
     """(P2 Dummy) Stores the computed restrictiveness score."""
     pass
 
-def p2_fetch_policies_by_drug(drug_name: str, payer: str = None) -> List[PolicyData]:
+def p2_fetch_policies_by_drug(drug_name: str = None, brand_name: str = None, hcpcs_code: str = None, payer: str = None) -> List[PolicyData]:
     """(P2 Dummy) DB retrieval for search."""
     return [PolicyData(
-        drug_name="Keytruda", 
-        brand_name="Keytruda",
-        hcpcs_code="J9271",
+        drug_name=drug_name or "Keytruda", 
+        brand_name=brand_name or "Keytruda",
+        hcpcs_code=hcpcs_code or "J9271",
         payer="Medicare" if not payer else payer,
         pa_required=True,
         effective_date="2026-01-01"

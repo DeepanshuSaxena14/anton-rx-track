@@ -1,25 +1,31 @@
+import logging
 from typing import Union, List, Dict
+from pydantic import ValidationError
 from app.schemas import PolicyData
+
+logger = logging.getLogger("rx-track-p4")
 
 def validate_extraction(raw_data: Union[List[Dict], Dict]) -> List[PolicyData]:
     """
     Validates unstructured JSON output against the 12-field schema.
-    Rejects hallucinated keys by mapping strictly to PolicyData.
-    Allows missing data as None.
-    Handles single object vs array of objects smoothly.
+    Extra keys are Forbidden natively by Pydantic.
+    Fails loudly if the schema shape is malformed or if arrays are passed as strings.
     """
     if isinstance(raw_data, dict):
         raw_data = [raw_data]
         
     validated_policies = []
     
-    for item in raw_data:
-        # Pydantic's BaseModel automatically filters out hallucinated fields
-        # if they aren't defined in the schema (standard behavior or explicit exclude).
-        # We instantiate it directly, feeding the raw dict.
-        # Any missing fields become None due to schema setup.
-        
-        # We use model_validate which handles dictionaries in v2
-        validated_policies.append(PolicyData.model_validate(item))
-        
+    for idx, item in enumerate(raw_data):
+        try:
+            # model_validate will fail loudly if arrays are strings or keys are hallucinated
+            policy = PolicyData.model_validate(item, strict=False) 
+            # Note: strict=False allows basic coercion, but arrays must be sequences.
+            # extra='forbid' in the schema handles hallucinated keys.
+            validated_policies.append(policy)
+        except ValidationError as e:
+            logger.error(f"Validation failed loudly on policy extraction item {idx}: {e.errors()}")
+            # Fail loudly with an explicit message to be bubbled up to the router
+            raise ValueError(f"Malformed extraction payload: {e.errors()}")
+            
     return validated_policies

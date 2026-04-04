@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query, HTTPException
 from typing import List
 
 from app.schemas import CompareResponse
-from app.services import p2_fetch_policies_by_drug, p1_compare_policies
+from app.services import p2_fetch_policies_by_drug, p2_normalize_policies
 
 router = APIRouter(prefix="/compare", tags=["compare"])
 
@@ -20,14 +20,12 @@ async def compare_policies(
     try:
         raw_policies = []
         for payer in payers:
-            # P2 should theoretically handle list fetches, but we iterate for stub safety
             found = p2_fetch_policies_by_drug(drug_name=drug_name, payer=payer)
             if found:
-                # take first matching for simplicity
-                raw_policies.append(found[0])
+                raw_policies.extend(found)
                 
-        # Normalizer strictly preserves 12-field layout
-        normalized = p1_compare_policies(raw_policies)
+        # Normalizer strictly preserves 12-field layout and exact constraint strings
+        normalized = p2_normalize_policies(raw_policies)
         
         return CompareResponse(
             drug_name=drug_name,

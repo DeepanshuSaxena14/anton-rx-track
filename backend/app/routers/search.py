@@ -3,9 +3,16 @@ from typing import Optional
 import uuid
 
 from app.schemas import SearchResponse, PolicyResult, QueryRequest, QueryResponse
-from app.services import p2_fetch_policies_by_drug, p1_rag_query
+from app.services import p2_fetch_policies_by_drug, p1_rag_query, p2_search_embeddings
 
 router = APIRouter(tags=["search"])
+
+# Simple stub alias resolver for the demo
+ALIAS_MAP = {
+    "keytruda": {"brand_name": "Keytruda", "drug_name": "pembrolizumab", "hcpcs_code": "J9271"},
+    "pembrolizumab": {"brand_name": "Keytruda", "drug_name": "pembrolizumab", "hcpcs_code": "J9271"},
+    "j9271": {"brand_name": "Keytruda", "drug_name": "pembrolizumab", "hcpcs_code": "J9271"},
+}
 
 @router.get("/search", response_model=SearchResponse)
 async def search_policies(
@@ -17,6 +24,7 @@ async def search_policies(
     """
     Structured search endpoint returning the 12-field policy schema.
     Retrieves data directly from P2 DB.
+    Combats aliasing.
     """
     if not (drug_name or brand_name or hcpcs_code):
         raise HTTPException(
@@ -24,11 +32,22 @@ async def search_policies(
             detail="Must provide at least one search parameter: drug_name, brand_name, or hcpcs_code"
         )
         
-    # We pass the primary search term to P2 helper. In a real scenario, P2 handles the OR logic.
-    primary_term = drug_name or brand_name or hcpcs_code
+    primary_term = (drug_name or brand_name or hcpcs_code).lower()
+    
+    # Resolve aliases if known
+    resolved_params = ALIAS_MAP.get(primary_term, {
+        "drug_name": drug_name, 
+        "brand_name": brand_name, 
+        "hcpcs_code": hcpcs_code
+    })
     
     try:
-        raw_policies = p2_fetch_policies_by_drug(drug_name=primary_term, payer=payer)
+        raw_policies = p2_fetch_policies_by_drug(
+            drug_name=resolved_params.get("drug_name"),
+            brand_name=resolved_params.get("brand_name"),
+            hcpcs_code=resolved_params.get("hcpcs_code"),
+            payer=payer
+        )
         
         results = []
         for p in raw_policies:
@@ -43,17 +62,18 @@ async def search_policies(
 async def query_policies(req: QueryRequest):
     """
     Natural-language QA endpoint using P1's RAG stack.
+    Fetches genuine chunk embeddings from P2 to drive P1 response.
     """
     if not req.question:
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
         
     try:
-        # Dummy context retrieval (P2 embeddings search)
-        context_chunks = [
-            "Keytruda requires prior authorization.", 
-            "No step therapy is required for J9271."
-        ]
-        citations = ["doc_123_page_1", "doc_123_page_2"]
+        # Retrieve REAL chunks using P2 embeddings interface
+        retrieved_items = p2_search_embeddings(req.question, top_k=5)
+        
+        context_chunks = [item["chunk"] for item in retrieved_items]
+        # Dynamically set real citations based on the payload rather than hardcoding
+        citations = [item["citation"] for item in retrieved_items if "citation" in item]
         
         answer = p1_rag_query(req.question, context_chunks)
         
