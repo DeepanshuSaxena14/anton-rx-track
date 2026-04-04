@@ -99,3 +99,116 @@ export const mockPolicies = [
     score: 2
   }
 ];
+
+export const mockChanges = [
+  {
+    id: 'chg-1',
+    date: new Date(Date.now() - 2 * 86400000).toISOString(),
+    payer: 'UnitedHealthcare',
+    drug: 'Keytruda',
+    drug_name: 'pembrolizumab',
+    type: 'criteria_changed',
+    summary: 'Prior authorization criteria updated to require specialist consultation.',
+    previous: 'Requires oncologist prescription',
+    current: 'Requires oncologist prescription AND specialized genetic testing results'
+  },
+  {
+    id: 'chg-2',
+    date: new Date(Date.now() - 5 * 86400000).toISOString(),
+    payer: 'Cigna',
+    drug: 'Dupixent',
+    drug_name: 'dupilumab',
+    type: 'coverage_added',
+    summary: 'New indication covered for pediatric asthma patients.',
+    previous: 'Ages 12+ covered for asthma',
+    current: 'Ages 6+ covered for asthma'
+  },
+  {
+    id: 'chg-3',
+    date: new Date(Date.now() - 12 * 86400000).toISOString(),
+    payer: 'Blue Cross Blue Shield NC',
+    drug: 'Keytruda',
+    drug_name: 'pembrolizumab',
+    type: 'restriction',
+    summary: 'Removed hospital outpatient site of care coverage.',
+    previous: 'Hospital Outpatient, Physician Office',
+    current: 'Physician Office only'
+  },
+  {
+    id: 'chg-4',
+    date: new Date(Date.now() - 18 * 86400000).toISOString(),
+    payer: 'UnitedHealthcare',
+    drug: 'Dupixent',
+    drug_name: 'dupilumab',
+    type: 'restriction',
+    summary: 'Step therapy added requiring generic alternative first.',
+    previous: 'No step therapy required',
+    current: 'Must fail generic topical steroids'
+  },
+  {
+    id: 'chg-5',
+    date: new Date(Date.now() - 25 * 86400000).toISOString(),
+    payer: 'Cigna',
+    drug: 'Keytruda',
+    drug_name: 'pembrolizumab',
+    type: 'coverage_added',
+    summary: 'Added coverage for Classical Hodgkin lymphoma.',
+    previous: 'Not covered for cHL',
+    current: 'Covered for cHL with standard PA criteria'
+  },
+  {
+    id: 'chg-6',
+    date: new Date(Date.now() - 30 * 86400000).toISOString(),
+    payer: 'Blue Cross Blue Shield NC',
+    drug: 'Dupixent',
+    drug_name: 'dupilumab',
+    type: 'criteria_changed',
+    summary: 'Eosinophil threshold adjusted for asthma indication.',
+    previous: 'Threshold >= 300 cells/mcL',
+    current: 'Threshold >= 150 cells/mcL'
+  },
+  {
+    id: 'chg-7',
+    date: new Date(Date.now() - 45 * 86400000).toISOString(),
+    payer: 'UnitedHealthcare',
+    drug: 'Keytruda',
+    drug_name: 'pembrolizumab',
+    type: 'restriction',
+    summary: 'Coverage status downgraded due to new guidelines.',
+    previous: 'Covered',
+    current: 'Conditional coverage based on staging'
+  },
+  {
+    id: 'chg-8',
+    date: new Date(Date.now() - 60 * 86400000).toISOString(),
+    payer: 'Cigna',
+    drug: 'Dupixent',
+    drug_name: 'dupilumab',
+    type: 'criteria_changed',
+    summary: 'Renewal duration extended from 6 months to 12 months.',
+    previous: 'Initial approval 6 months, renewal 6 months',
+    current: 'Initial approval 6 months, renewal 12 months'
+  },
+  {
+    id: 'chg-9',
+    date: new Date(Date.now() - 75 * 86400000).toISOString(),
+    payer: 'Blue Cross Blue Shield NC',
+    drug: 'Keytruda',
+    drug_name: 'pembrolizumab',
+    type: 'restriction',
+    summary: 'Restrictiveness score increased following medical review.',
+    previous: 'Score: 2',
+    current: 'Score: 3'
+  },
+  {
+    id: 'chg-10',
+    date: new Date(Date.now() - 85 * 86400000).toISOString(),
+    payer: 'UnitedHealthcare',
+    drug: 'Dupixent',
+    drug_name: 'dupilumab',
+    type: 'coverage_added',
+    summary: 'Broadened coverage to include home infusion services.',
+    previous: 'Physician Office only',
+    current: 'Physician Office, Home Infusion'
+  }
+];
