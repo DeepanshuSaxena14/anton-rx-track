@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom'
+/* eslint-disable no-unused-vars */
+import { NavLink, Link } from 'react-router-dom'
 import {
   Search,
   Upload,
@@ -12,7 +13,7 @@ const linkBase =
   'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-sm transition-colors sm:px-3'
 
 const navItems = [
-  { to: '/', label: 'Search', icon: Search },
+  { to: '/search', label: 'Search', icon: Search },
   { to: '/upload', label: 'Upload', icon: Upload },
   { to: '/compare', label: 'Compare', icon: GitCompare },
   { to: '/changes', label: 'Changes', icon: Clock },
@@ -24,17 +25,23 @@ export default function Nav() {
   return (
     <header className="fixed top-0 z-50 h-14 w-full border-b border-surface-border bg-surface-0/80 backdrop-blur-md">
       <div className="relative mx-auto flex h-full max-w-[1600px] items-center justify-between gap-3 px-4">
-        <div className="flex min-w-0 shrink-0 items-center gap-3">
+        <Link to="/" className="flex min-w-0 shrink-0 items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity group">
           <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-500 font-display text-sm font-semibold text-white shadow-sm"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full overflow-hidden shadow-sm shadow-brand-500/20 rotate-45 transform transition-transform group-hover:rotate-0"
             aria-hidden
           >
-            Rx
+            <div className="h-full w-1/2 bg-brand-500"></div>
+            <div className="h-full w-1/2 bg-emerald-500"></div>
           </div>
-          <h1 className="font-display text-lg font-semibold tracking-tight text-[#e8e8f0] sm:text-xl">
-            Anton <span className="text-brand-500">RX</span> Track
-          </h1>
-        </div>
+          <div className="flex flex-col">
+            <h1 className="font-display text-lg font-bold tracking-tight text-white leading-none">
+              ADM
+            </h1>
+            <span className="text-[10px] sm:text-[11px] font-medium uppercase tracking-widest text-slate-400 mt-0.5">
+              All Drugs Matter
+            </span>
+          </div>
+        </Link>
 
         <nav
           className="absolute left-1/2 top-1/2 flex max-w-[min(100vw-12rem,42rem)] -translate-x-1/2 -translate-y-1/2 items-center gap-0.5 overflow-x-auto px-1 sm:gap-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"

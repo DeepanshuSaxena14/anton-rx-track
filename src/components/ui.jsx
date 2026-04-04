@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { AlertCircle } from 'lucide-react';
 
 export function CoverageBadge({ status }) {
