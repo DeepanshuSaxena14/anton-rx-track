@@ -108,3 +108,28 @@ def _call_cerebras(system_prompt: str, user_prompt: str, temperature: float, res
     if not api_key:
         raise ValueError("CEREBRAS_API_KEY is not set.")
     return _call_openai_compatible(CEREBRAS_API_URL, api_key, "llama3.1-70b", system_prompt, user_prompt, temperature, response_format, "cerebras")
+
+# --- Minimal Smoke Test / Example Usage ---
+# Run this script directly to verify missing credentials raise clear errors:
+# python -m app.ai.llm_client
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    print("Testing LLM Client Graceful Failure (Keys should NOT be hardcoded).")
+    
+    print("\n--- Testing Extraction Route (Gemini) ---")
+    try:
+        call_llm("extraction", "You are a test bot.", "Hello.")
+        print("[SUCCESS] Extraction call worked (keys were present in environment).")
+    except ValueError as e:
+        print(f"[EXPECTED FAILURE] Missing Key for Extraction: {e}")
+    except Exception as e:
+        print(f"[UNEXPECTED FAILURE] Extraction: {e}")
+
+    print("\n--- Testing QA Route (Groq -> Cerebras Fallback) ---")
+    try:
+        call_llm("qa", "You are a test bot.", "Hello.")
+        print("[SUCCESS] QA call worked (keys were present in environment).")
+    except ValueError as e:
+        print(f"[EXPECTED FAILURE] Missing Key for QA/Cerebras: {e}")
+    except Exception as e:
+        print(f"[UNEXPECTED FAILURE] QA: {e}")
