@@ -1,0 +1,83 @@
+from fastapi import APIRouter, Query, HTTPException
+from typing import Optional
+import uuid
+
+from app.schemas import SearchResponse, PolicyResult, QueryRequest, QueryResponse
+from app.services import p2_fetch_policies_by_drug, p1_rag_query, p2_search_embeddings
+
+router = APIRouter(tags=["search"])
+
+# Simple stub alias resolver for the demo
+ALIAS_MAP = {
+    "keytruda": {"brand_name": "Keytruda", "drug_name": "pembrolizumab", "hcpcs_code": "J9271"},
+    "pembrolizumab": {"brand_name": "Keytruda", "drug_name": "pembrolizumab", "hcpcs_code": "J9271"},
+    "j9271": {"brand_name": "Keytruda", "drug_name": "pembrolizumab", "hcpcs_code": "J9271"},
+}
+
+@router.get("/search", response_model=SearchResponse)
+async def search_policies(
+    drug_name: Optional[str] = Query(None, description="Search by generic drug name"),
+    brand_name: Optional[str] = Query(None, description="Search by brand name"),
+    hcpcs_code: Optional[str] = Query(None, description="Search by HCPCS code"),
+    payer: Optional[str] = Query(None, description="Filter by specific payer")
+):
+    """
+    Structured search endpoint returning the 12-field policy schema.
+    Retrieves data directly from P2 DB.
+    Combats aliasing.
+    """
+    if not (drug_name or brand_name or hcpcs_code):
+        raise HTTPException(
+            status_code=400, 
+            detail="Must provide at least one search parameter: drug_name, brand_name, or hcpcs_code"
+        )
+        
+    primary_term = (drug_name or brand_name or hcpcs_code).lower()
+    
+    # Resolve aliases if known
+    resolved_params = ALIAS_MAP.get(primary_term, {
+        "drug_name": drug_name, 
+        "brand_name": brand_name, 
+        "hcpcs_code": hcpcs_code
+    })
+    
+    try:
+        raw_policies = p2_fetch_policies_by_drug(
+            drug_name=resolved_params.get("drug_name"),
+            brand_name=resolved_params.get("brand_name"),
+            hcpcs_code=resolved_params.get("hcpcs_code"),
+            payer=payer
+        )
+        
+        results = []
+        for p in raw_policies:
+            results.append(PolicyResult(id=str(uuid.uuid4()), data=p))
+            
+        return SearchResponse(results=results)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+@router.post("/query", response_model=QueryResponse)
+async def query_policies(req: QueryRequest):
+    """
+    Natural-language QA endpoint using P1's RAG stack.
+    Fetches genuine chunk embeddings from P2 to drive P1 response.
+    """
+    if not req.question:
+        raise HTTPException(status_code=400, detail="Question cannot be empty.")
+        
+    try:
+        # Retrieve REAL chunks using P2 embeddings interface
+        retrieved_items = p2_search_embeddings(req.question, top_k=5)
+        
+        context_chunks = [item["chunk"] for item in retrieved_items]
+        # Dynamically set real citations based on the payload rather than hardcoding
+        citations = [item["citation"] for item in retrieved_items if "citation" in item]
+        
+        answer = p1_rag_query(req.question, context_chunks)
+        
+        return QueryResponse(answer=answer, citations=citations)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
