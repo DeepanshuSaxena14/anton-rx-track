@@ -46,18 +46,19 @@ export default function Home() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-12 sm:py-24">
       {/* Hero Section */}
-      <div className="text-center mb-16 fade-up">
-        <h1 className="font-display text-7xl sm:text-9xl font-bold text-white mb-2 tracking-tight">
-          ADM
+      <div className="text-center mb-20 fade-up max-w-[100vw] overflow-hidden px-4">
+        <h1 className="font-sans text-5xl sm:text-7xl md:text-8xl lg:text-[7rem] font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white via-brand-400 to-emerald-400 mb-8 tracking-tight leading-snug pb-4">
+          CoverageIQ
         </h1>
-        <div className="text-3xl sm:text-5xl font-display font-medium tracking-tight mb-8">
-          <span className="bg-gradient-to-r from-brand-500 to-emerald-400 bg-clip-text text-transparent">
-            All Drugs Matter
-          </span>
+        <div className="max-w-4xl mx-auto">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-8 tracking-tight leading-snug uppercase">
+            <span className="block mb-2">Stop reading PDFs.</span>
+            <span className="block text-brand-400">Start making decisions.</span>
+          </h2>
+          <p className="text-base sm:text-lg md:text-xl text-slate-400 leading-relaxed max-w-3xl mx-auto mb-12">
+            An AI-powered platform that instantly answers any question about medical benefit drug policies across health plans.
+          </p>
         </div>
-        <p className="max-w-3xl mx-auto text-base sm:text-xl text-slate-400 leading-relaxed mb-12">
-          ADM is a policy intelligence platform for medical benefit drugs. Upload insurance policy PDFs, instantly search coverage across payers, compare prior authorization requirements side by side, and track what changed — all powered by AI.
-        </p>
 
         {/* Stats Row */}
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 fade-up fade-up-delay-1">
