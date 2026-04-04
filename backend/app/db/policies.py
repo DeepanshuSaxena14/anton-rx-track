@@ -69,13 +69,18 @@ def get_policy_by_payer_and_drug(payer: str, drug_query: str):
     normalized_payload = normalize_policy_payload({"payer": payer, "drug_name": drug_query})
     normalized_payer = normalized_payload.get("payer") or payer.strip()
 
+    drug_name = normalized_payload.get("drug_name") or drug_query
+    brand_name = normalized_payload.get("brand_name") or drug_query
+    hcpcs_code = normalized_payload.get("hcpcs_code") or drug_query
+
     response = (
         supabase.table("policies")
         .select("*")
         .ilike("payer", normalized_payer)
         .or_(
-            f"drug_name.ilike.%{drug_query}%,brand_name.ilike.%{drug_query}%,hcpcs_code.ilike.%{drug_query}%"
+            f"drug_name.ilike.%{drug_name}%,brand_name.ilike.%{brand_name}%,hcpcs_code.ilike.%{hcpcs_code}%"
         )
+        .order("effective_date", desc=True)
         .limit(1)
         .execute()
     )
