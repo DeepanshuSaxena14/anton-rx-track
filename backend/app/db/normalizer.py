@@ -96,7 +96,10 @@ def normalize_coverage_status(raw_status: str | None) -> str | None:
     key = _key(raw_status)
     if not key:
         return None
-    return COVERAGE_STATUS_MAP.get(key, key.replace(" ", "_"))
+    mapped = COVERAGE_STATUS_MAP.get(key)
+    if not mapped:
+        raise ValueError(f"Invalid coverage_status '{raw_status}'. Allowed values are 'covered', 'not_covered', 'conditional' or their aliases.")
+    return mapped
 
 
 def normalize_site_of_care(values: list[str] | None) -> list[str]:

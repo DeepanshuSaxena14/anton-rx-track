@@ -14,7 +14,7 @@ create table if not exists policies (
     brand_name text,
     hcpcs_code text,
     payer text,
-    coverage_status text,
+    coverage_status text check (coverage_status in ('covered', 'not_covered', 'conditional')),
     covered_indications jsonb not null default '[]'::jsonb,
     pa_required boolean,
     pa_criteria jsonb not null default '[]'::jsonb,

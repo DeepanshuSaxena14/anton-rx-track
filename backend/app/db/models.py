@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -9,7 +9,7 @@ class PolicyInsert(BaseModel):
     brand_name: str | None = None
     hcpcs_code: str | None = None
     payer: str | None = None
-    coverage_status: str | None = None
+    coverage_status: Literal["covered", "not_covered", "conditional"] | None = None
     covered_indications: list[str] = Field(default_factory=list)
     pa_required: bool | None = None
     pa_criteria: list[str] = Field(default_factory=list)
