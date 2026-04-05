@@ -2,6 +2,7 @@ import axios from 'axios';
 import { mockPolicies, mockChanges } from '../mocks/mockData';
 
 const MOCK_MODE = true;
+// TODO Phase 2: add getAccessTokenSilently() to axios interceptor.
 
 export async function searchPolicies(drugName) {
   if (MOCK_MODE) {

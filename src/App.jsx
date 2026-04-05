@@ -7,6 +7,7 @@ import Compare from './pages/Compare'
 import Changes from './pages/Changes'
 import Leaderboard from './pages/Leaderboard'
 import Monitor from './pages/Monitor'
+import ProtectedRoute from './components/ProtectedRoute'
 
 export default function App() {
   return (
@@ -14,13 +15,13 @@ export default function App() {
       <Nav />
       <main className="min-h-screen pt-14">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/upload" element={<Upload />} />
-          <Route path="/compare" element={<Compare />} />
-          <Route path="/changes" element={<Changes />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/monitor" element={<Monitor />} />
+          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
+          <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
+          <Route path="/compare" element={<ProtectedRoute><Compare /></ProtectedRoute>} />
+          <Route path="/changes" element={<ProtectedRoute><Changes /></ProtectedRoute>} />
+          <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+          <Route path="/monitor" element={<ProtectedRoute><Monitor /></ProtectedRoute>} />
         </Routes>
       </main>
     </BrowserRouter>

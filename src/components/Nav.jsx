@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { NavLink, Link } from 'react-router-dom'
+import { useAuth0 } from '@auth0/auth0-react'
 import {
   Search,
   Upload,
@@ -23,6 +24,8 @@ const navItems = [
 ]
 
 export default function Nav() {
+  const { user, isAuthenticated, logout } = useAuth0();
+
   return (
     <header className="fixed top-0 z-50 h-14 w-full border-b border-surface-border bg-surface-0/80 backdrop-blur-md">
       <div className="relative mx-auto flex h-full max-w-[1600px] items-center justify-between gap-3 px-4">
@@ -64,7 +67,7 @@ export default function Nav() {
           ))}
         </nav>
 
-        <div className="flex shrink-0 items-center">
+        <div className="flex shrink-0 items-center gap-4">
           <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-200">
             <span
               className="relative flex h-2 w-2"
@@ -75,6 +78,30 @@ export default function Nav() {
             </span>
             Mock mode
           </span>
+
+          {isAuthenticated && user && (
+            <div className="flex items-center gap-3 pl-4 border-l border-surface-border">
+              <div className="flex items-center gap-2">
+                {user.picture ? (
+                  <img src={user.picture} alt={user.name} className="h-6 w-6 rounded-full" />
+                ) : (
+                  <div className="h-6 w-6 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs font-medium">
+                    {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
+                <span className="text-xs font-medium text-slate-400 max-w-[120px] truncate hidden sm:block">
+                  {user.name || user.email}
+                </span>
+              </div>
+              <button
+                onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                className="text-xs font-medium text-slate-500 hover:text-red-400 transition-colors"
+                title="Log out"
+              >
+                Log out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>
