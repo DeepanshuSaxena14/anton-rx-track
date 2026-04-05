@@ -1,6 +1,6 @@
 import json
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 
 # 12-Field Core Model enforcing exact types
 class PolicyData(BaseModel):
@@ -63,10 +63,17 @@ class FieldChange(BaseModel):
     new_value: Any
 
 class ChangeSummary(BaseModel):
+    id: str
+    date: str
+    payer: str
+    drug: str
+    type: Literal["coverage_added", "restriction", "criteria_changed"]
     version_old: str
     version_new: str
     diff_summary: str
     field_changes: List[FieldChange]
+    previous: Optional[str] = None
+    current: Optional[str] = None
 
 class ChangesResponse(BaseModel):
     history: List[ChangeSummary]

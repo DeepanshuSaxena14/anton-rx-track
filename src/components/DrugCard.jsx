@@ -1,99 +1,258 @@
 import { useState } from 'react';
 import { CoverageBadge, ScoreDots, HcpcsPill, SiteOfCareTags } from './ui';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function DrugCard({ policy, index }) {
   const [expanded, setExpanded] = useState(false);
-  const delayNum = Math.min(index + 1, 6);
-  const delayClass = `fade-up-delay-${delayNum}`;
 
   return (
-    <div className={`border border-[var(--border)] bg-[var(--bg-2)] p-1 fade-up ${delayClass} rounded-lg transition-colors hover:border-[var(--accent)] group`}>
-      <div className="p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6 pb-4 border-b border-[var(--border)]">
+    <div
+      style={{
+        background: 'var(--bg)',
+        border: '1px solid var(--border-strong)',
+        borderRadius: 'var(--radius-card)',
+        overflow: 'hidden',
+        transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = 'var(--border-hover)';
+        e.currentTarget.style.boxShadow = '0 4px 20px rgba(18,19,23,0.06)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = 'var(--border-strong)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
+    >
+      <div style={{ padding: '1.5rem' }}>
+        {/* Header */}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            marginBottom: '1.25rem',
+            paddingBottom: '1.25rem',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
           <div>
-            <div className="text-[10px] font-mono tracking-widest text-[var(--accent)] uppercase mb-2">[{policy.payer}]</div>
-            <div className="flex items-center gap-3">
-              <h2 className="font-display font-light text-2xl text-[var(--fg)] m-0 leading-none">{policy.drug_name}</h2>
-              <span className="font-mono text-xs text-[var(--muted)] uppercase tracking-wider">{policy.brand_name}</span>
+            <div
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.65rem',
+                letterSpacing: '0.08em',
+                color: 'var(--fg-3)',
+                textTransform: 'uppercase',
+                marginBottom: '0.4rem',
+              }}
+            >
+              {policy.payer}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <h2
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: 400,
+                  fontSize: '1.3rem',
+                  color: 'var(--fg)',
+                  margin: 0,
+                  lineHeight: 1.2,
+                }}
+              >
+                {policy.drug_name}
+              </h2>
+              {policy.brand_name && (
+                <span
+                  style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '0.8rem',
+                    color: 'var(--fg-3)',
+                  }}
+                >
+                  {policy.brand_name}
+                </span>
+              )}
               <HcpcsPill code={policy.hcpcs_code} />
             </div>
           </div>
-          <div className="flex flex-col items-end gap-3">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
             <CoverageBadge status={policy.coverage_status} />
             <ScoreDots score={policy.score} />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-8 mb-6 p-4 border border-[var(--border)] bg-[var(--bg)] rounded">
-          <div className="flex items-center gap-3">
-            <div className="text-sm">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted)] block mb-1">PA_REQUIRED</span>
-              <span className={`font-mono text-xs uppercase tracking-wider font-semibold ${policy.pa_required ? 'text-rose-400' : 'text-[var(--fg)]'}`}>{policy.pa_required ? 'TRUE' : 'FALSE'}</span>
+        {/* Key fields */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            gap: '0',
+            background: 'var(--bg-2)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-sm)',
+            overflow: 'hidden',
+            marginBottom: '1rem',
+          }}
+        >
+          {[
+            { label: 'PA Required', value: policy.pa_required ? 'Yes' : 'No', danger: policy.pa_required },
+            { label: 'Step Therapy', value: policy.step_therapy_required ? 'Required' : 'No', danger: policy.step_therapy_required },
+            { label: 'Effective', value: policy.effective_date ? new Date(policy.effective_date).toISOString().split('T')[0] : '—' },
+          ].map(({ label, value, danger }) => (
+            <div key={label} style={{ padding: '0.85rem 1rem', borderRight: '1px solid var(--border)' }}>
+              <div
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.6rem',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: 'var(--fg-3)',
+                  marginBottom: '0.3rem',
+                }}
+              >
+                {label}
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
+                  color: danger ? 'var(--danger)' : 'var(--fg)',
+                }}
+              >
+                {value}
+              </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="text-sm">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted)] block mb-1">STEP_THERAPY</span>
-              <span className={`font-mono text-xs uppercase tracking-wider font-semibold ${policy.step_therapy_required ? 'text-rose-400' : 'text-[var(--fg)]'}`}>
-                {policy.step_therapy_required ? 'REQUIRED' : 'NULL'}
-              </span>
-            </div>
-          </div>
-          
-          <div className="flex flex-col justify-center">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted)] block mb-1">EFFECTIVE_DATE</span>
-            <span className="font-mono text-xs uppercase tracking-wider text-[var(--fg)] font-semibold">
-              {new Date(policy.effective_date).toISOString().split('T')[0]}
-            </span>
-          </div>
+          ))}
         </div>
 
+        {/* Site of care */}
         <div>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted)] block mb-2">SITE_OF_CARE_MATRIX</span>
+          <div
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.6rem',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'var(--fg-3)',
+              marginBottom: '0.5rem',
+            }}
+          >
+            Site of Care
+          </div>
           {policy.site_of_care && policy.site_of_care.length > 0 ? (
             <SiteOfCareTags sites={policy.site_of_care} />
           ) : (
-            <span className="font-mono text-xs text-[var(--muted)]">NULL</span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--fg-3)' }}>—</span>
           )}
         </div>
 
+        {/* Expanded section */}
         {expanded && (
-          <div className="mt-6 pt-6 border-t border-[var(--border)] space-y-6 animate-in fade-in duration-200">
-            <div>
-              <h4 className="font-mono text-[10px] tracking-widest text-[var(--accent)] uppercase mb-3"># INDICATIONS_ARRAY</h4>
-              {policy.covered_indications && policy.covered_indications.length > 0 ? (
-                <ul className="space-y-2">
+          <div
+            style={{
+              marginTop: '1.25rem',
+              paddingTop: '1.25rem',
+              borderTop: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem',
+            }}
+          >
+            {policy.covered_indications && policy.covered_indications.length > 0 && (
+              <div>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.6rem',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: 'var(--fg-3)',
+                    marginBottom: '0.6rem',
+                  }}
+                >
+                  Indications
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   {policy.covered_indications.map((ind, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs font-mono text-[color-mix(in_srgb,var(--fg)_80%,transparent)] leading-relaxed uppercase">
-                      <span className="text-[var(--accent)] opacity-70">{'>'}</span> {ind}
+                    <li
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        gap: '0.5rem',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '0.82rem',
+                        color: 'var(--fg-2)',
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      <span style={{ color: 'var(--fg-3)', flexShrink: 0 }}>›</span>
+                      {ind}
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="font-mono text-xs text-[var(--muted)]">NULL</p>
-              )}
-            </div>
+              </div>
+            )}
 
-            <div>
-              <h4 className="font-mono text-[10px] tracking-widest text-[var(--accent)] uppercase mb-3"># PA_CRITERIA_MATRIX</h4>
-              {policy.pa_criteria && policy.pa_criteria.length > 0 ? (
-                <ul className="space-y-2">
-                  {policy.pa_criteria.map((crit, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs font-mono text-[color-mix(in_srgb,var(--fg)_80%,transparent)] leading-relaxed uppercase">
-                      <span className="text-[var(--accent)] opacity-70">{'>'}</span> {crit}
+            {policy.pa_criteria && policy.pa_criteria.length > 0 && (
+              <div>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.6rem',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: 'var(--fg-3)',
+                    marginBottom: '0.6rem',
+                  }}
+                >
+                  PA Criteria
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  {policy.pa_criteria.map((c, i) => (
+                    <li
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        gap: '0.5rem',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '0.82rem',
+                        color: 'var(--fg-2)',
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      <span style={{ color: 'var(--fg-3)', flexShrink: 0 }}>›</span>
+                      {c}
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="font-mono text-xs text-[var(--muted)]">NULL</p>
-              )}
-            </div>
+              </div>
+            )}
 
             {policy.step_therapy_required && policy.step_therapy_details && (
-              <div>
-                <h4 className="font-mono text-[10px] tracking-widest text-rose-400 uppercase mb-3"># STEP_THERAPY_OVERRIDE</h4>
-                <p className="font-mono text-xs text-[var(--fg)] bg-[color-mix(in_srgb,transparent_90%,#f43f5e)] p-4 border border-[color-mix(in_srgb,transparent_70%,#f43f5e)] rounded uppercase">
+              <div
+                style={{
+                  padding: '1rem',
+                  background: 'rgba(143,42,42,0.04)',
+                  border: '1px solid rgba(143,42,42,0.15)',
+                  borderRadius: 'var(--radius-sm)',
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.6rem',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: 'var(--danger)',
+                    marginBottom: '0.4rem',
+                  }}
+                >
+                  Step Therapy Details
+                </div>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-2)', margin: 0 }}>
                   {policy.step_therapy_details}
                 </p>
               </div>
@@ -102,11 +261,43 @@ export default function DrugCard({ policy, index }) {
         )}
       </div>
 
+      {/* Expand toggle */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-center gap-2 py-3 bg-[var(--bg)] border-t border-[var(--border)] text-xs font-mono tracking-widest text-[var(--accent)] hover:text-[var(--bg)] hover:bg-[var(--accent)] transition-colors uppercase rounded-b-md"
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.4rem',
+          padding: '0.75rem',
+          background: 'var(--bg-2)',
+          borderTop: '1px solid var(--border)',
+          border: 'none',
+          borderBottom: 'none',
+          borderLeft: 'none',
+          borderRight: 'none',
+          borderTop: '1px solid var(--border)',
+          cursor: 'pointer',
+          fontFamily: 'var(--font-body)',
+          fontSize: '0.8rem',
+          color: 'var(--fg-3)',
+          transition: 'background 0.15s ease, color 0.15s ease',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = 'var(--bg-3)';
+          e.currentTarget.style.color = 'var(--fg)';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = 'var(--bg-2)';
+          e.currentTarget.style.color = 'var(--fg-3)';
+        }}
       >
-        {expanded ? '[ COLLAPSE ]' : '[ EXPAND_DATA ]'}
+        {expanded ? (
+          <><ChevronUp style={{ width: '0.9rem', height: '0.9rem' }} />Show less</>
+        ) : (
+          <><ChevronDown style={{ width: '0.9rem', height: '0.9rem' }} />Show more</>
+        )}
       </button>
     </div>
   );

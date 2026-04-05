@@ -1,41 +1,25 @@
 import axios from 'axios';
-import { mockPolicies, mockChanges } from '../mocks/mockData';
 
-const MOCK_MODE = true;
+// Production API Configuration
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+const MOCK_MODE = false;
+
 // TODO Phase 2: add getAccessTokenSilently() to axios interceptor.
 
 export async function searchPolicies(drugName) {
   if (MOCK_MODE) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const query = drugName.toLowerCase();
-        const results = mockPolicies.filter(
-          (p) =>
-            p.drug_name.toLowerCase().includes(query) ||
-            p.brand_name.toLowerCase().includes(query)
-        );
-        resolve(results);
-      }, 600);
-    });
+    // ... mock logic omitted for brevity as it's disabled
+    return [];
   }
 
-  const response = await axios.get(`/search?drug=${encodeURIComponent(drugName)}`);
+  const response = await axios.get(`/search?drug_name=${encodeURIComponent(drugName)}`);
   return response.data;
 }
 
 export async function queryNL(question) {
   if (MOCK_MODE) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          answer: 'Based on the policy criteria, coverage typically requires prior authorization and may involve step therapy depending on the indication. Clinical records supporting the diagnosis are standard baseline requirements.',
-          sources: [
-            { payer: 'UnitedHealthcare', drug: 'Keytruda', section: 'Prior Auth' },
-            { payer: 'Cigna', drug: 'Dupixent', section: 'Step Therapy' },
-          ],
-        });
-      }, 1200);
-    });
+    return { answer: 'Mock answer', sources: [] };
   }
 
   const response = await axios.post('/query', { question });
@@ -44,15 +28,7 @@ export async function queryNL(question) {
 
 export async function ingestPDF(file) {
   if (MOCK_MODE) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          success: true,
-          policy: mockPolicies[0],
-          message: 'Policy extracted and stored (mock)'
-        });
-      }, 2500);
-    });
+    return { success: true, policy: {}, message: 'Mock ingest' };
   }
 
   const formData = new FormData();
@@ -65,53 +41,41 @@ export async function ingestPDF(file) {
 
 export async function comparePolicies(drugName, payerA, payerB) {
   if (MOCK_MODE) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const query = drugName.toLowerCase();
-        const policyA = mockPolicies.find(
-          (p) => (p.drug_name.toLowerCase().includes(query) || p.brand_name.toLowerCase().includes(query)) && p.payer === payerA
-        ) || null;
-        const policyB = mockPolicies.find(
-          (p) => (p.drug_name.toLowerCase().includes(query) || p.brand_name.toLowerCase().includes(query)) && p.payer === payerB
-        ) || null;
-        resolve({ policyA, policyB });
-      }, 600);
-    });
+    return { policyA: null, policyB: null };
   }
 
+  // Backend /compare uses 'payers' list query param
   const response = await axios.get(
-    `/compare?drug=${encodeURIComponent(drugName)}&payer_a=${encodeURIComponent(payerA)}&payer_b=${encodeURIComponent(payerB)}`
+    `/compare?drug_name=${encodeURIComponent(drugName)}&payers=${encodeURIComponent(payerA)}&payers=${encodeURIComponent(payerB)}`
   );
   return response.data;
 }
 
 export async function getChanges(filters) {
   if (MOCK_MODE) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        let results = [...mockChanges];
-        if (filters.payer) {
-          results = results.filter(c => c.payer === filters.payer);
-        }
-        if (filters.drug) {
-          results = results.filter(c => c.drug === filters.drug);
-        }
-        if (filters.type) {
-          results = results.filter(c => c.type === filters.type);
-        }
-        results.sort((a, b) => new Date(b.date) - new Date(a.date));
-        resolve(results);
-      }, 600);
-    });
+    return [];
   }
 
   const queryParams = new URLSearchParams();
   if (filters.payer) queryParams.append('payer', filters.payer);
-  if (filters.drug) queryParams.append('drug', filters.drug);
-  if (filters.type) queryParams.append('type', filters.type);
-  
+  // Backend uses 'drug_name' for changes
+  if (filters.drug) queryParams.append('drug_name', filters.drug);
+
   const response = await axios.get(`/changes?${queryParams.toString()}`);
   return response.data;
 }
 
+export async function getPayerRankings(drugName) {
+  const response = await axios.get(`/scores?drug_name=${encodeURIComponent(drugName)}`);
+  return response.data;
+}
 
+export async function generateAppeal(drug, payer, denialReason, extraContext = '') {
+  const response = await axios.post('/appeal', {
+    drug,
+    payer,
+    denial_reason: denialReason,
+    extra_context: extraContext
+  });
+  return response.data;
+}

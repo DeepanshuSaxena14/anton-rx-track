@@ -1,14 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
-import { Search, UploadCloud, FileDiff, Activity, LogOut } from 'lucide-react';
+import { Search, UploadCloud, FileDiff, Activity, LogOut, Trophy, Scale } from 'lucide-react';
 
 export default function Nav() {
   const { logout, user } = useAuth0();
   const location = useLocation();
 
-  if (location.pathname === '/') {
-    return null; // Hidden on home page
-  }
+  if (location.pathname === '/') return null;
 
   const handleLogout = () => {
     logout({ logoutParams: { returnTo: window.location.origin } });
@@ -19,30 +17,68 @@ export default function Nav() {
     { to: '/upload', path: '/upload', label: 'Ingest', icon: UploadCloud },
     { to: '/compare', path: '/compare', label: 'Compare', icon: FileDiff },
     { to: '/changes', path: '/changes', label: 'Changes', icon: Activity },
+    { to: '/leaderboard', path: '/leaderboard', label: 'Scores', icon: Trophy },
+    { to: '/appeal', path: '/appeal', label: 'Appeal', icon: Scale },
   ];
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-[var(--bg)] border-b border-[var(--border)] px-4 h-14 flex items-center justify-between">
-      
-      <div className="flex items-center gap-6">
-        <NavLink to="/" className="group flex items-center gap-2 cursor-pointer border-none bg-transparent hover:opacity-80 transition-opacity flex-shrink-0">
-          <span className="font-display font-semibold italic text-lg text-[var(--accent)] tracking-tight leading-none m-0 pt-1">CoverageIQ</span>
+    <nav
+      className="fixed top-0 w-full z-50 h-14 flex items-center justify-between px-5"
+      style={{
+        background: 'rgba(255,255,255,0.88)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: '1px solid var(--border-strong)',
+      }}
+    >
+      {/* Logo + Links */}
+      <div className="flex items-center gap-2">
+        <NavLink
+          to="/"
+          className="flex items-center gap-1.5 mr-3 hover:opacity-70 transition-opacity"
+        >
+          <span
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontWeight: 500,
+              fontSize: '1rem',
+              color: 'var(--fg)',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            CoverageIQ
+          </span>
         </NavLink>
 
         <div className="hidden sm:flex items-center gap-1">
-          {links.map(({ to, label, path, icon: Icon }) => {
-            const isActive = location.pathname.startsWith(path);
+          {links.map(({ to, label, icon: Icon }) => {
+            const isActive = location.pathname.startsWith(to);
             return (
               <NavLink
                 key={to}
                 to={to}
-                className={`flex flex-shrink-0 items-center gap-2 px-3 py-1.5 rounded-sm font-mono text-[10px] uppercase tracking-widest transition-colors ${
-                  isActive 
-                    ? 'bg-[var(--bg-2)] text-[var(--accent)] font-bold' 
-                    : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-2)]'
-                }`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.4rem 1rem',
+                  borderRadius: 'var(--radius-pill)',
+                  fontSize: '0.8rem',
+                  fontWeight: isActive ? 500 : 400,
+                  fontFamily: 'var(--font-body)',
+                  color: isActive ? 'var(--fg)' : 'var(--fg-3)',
+                  background: isActive ? 'var(--bg-3)' : 'transparent',
+                  transition: 'all 0.15s ease',
+                  textDecoration: 'none',
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) e.currentTarget.style.background = 'var(--bg-2)';
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) e.currentTarget.style.background = 'transparent';
+                }}
               >
-                <Icon className={`w-3 h-3 flex-shrink-0 ${isActive ? 'text-[var(--accent)]' : 'text-[var(--muted)] opacity-60'}`} />
+                <Icon style={{ width: '0.875rem', height: '0.875rem', flexShrink: 0 }} />
                 {label}
               </NavLink>
             );
@@ -50,22 +86,70 @@ export default function Nav() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      {/* Right: user + logout */}
+      <div className="flex items-center gap-3">
         {user && (
-           <span className="hidden sm:block font-mono text-[10px] text-[var(--muted)] uppercase tracking-wider truncate max-w-[120px]">
-             USER: <span className="text-[var(--fg)]">{user.name}</span>
-           </span>
+          <div className="hidden sm:flex items-center gap-2">
+            {user.picture && (
+              <img
+                src={user.picture}
+                alt={user.name}
+                style={{
+                  width: '1.75rem',
+                  height: '1.75rem',
+                  borderRadius: '50%',
+                  border: '1px solid var(--border-strong)',
+                  objectFit: 'cover',
+                }}
+              />
+            )}
+            <span
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.8rem',
+                color: 'var(--fg-2)',
+                maxWidth: '120px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {user.name}
+            </span>
+          </div>
         )}
+
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-[var(--muted)] hover:text-rose-400 transition-colors bg-transparent border-none cursor-pointer flex-shrink-0"
           title="Log out"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            padding: '0.4rem 0.9rem',
+            borderRadius: 'var(--radius-pill)',
+            fontSize: '0.8rem',
+            fontWeight: 400,
+            fontFamily: 'var(--font-body)',
+            color: 'var(--fg-3)',
+            background: 'transparent',
+            border: '1px solid var(--border-strong)',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'var(--bg-3)';
+            e.currentTarget.style.color = 'var(--fg)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = 'var(--fg-3)';
+          }}
         >
-          <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-          <span className="hidden sm:inline">Logout</span>
+          <LogOut style={{ width: '0.875rem', height: '0.875rem' }} />
+          <span className="hidden sm:inline">Sign out</span>
         </button>
       </div>
-
     </nav>
   );
 }
