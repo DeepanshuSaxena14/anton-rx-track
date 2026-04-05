@@ -49,9 +49,22 @@ async def search_policies(
             payer=payer
         )
         
+        # Deduplicate: Only return the latest version (by effective_date) for each unique (payer, drug)
+        # 1. Sort by effective_date descending
+        raw_policies.sort(key=lambda x: x.effective_date or "", reverse=True)
+
         results = []
+        seen = set() # (payer, drug_name)
+        
         for p in raw_policies:
-            results.append(PolicyResult(id=str(uuid.uuid4()), data=p))
+            if not p.payer or not p.drug_name:
+                results.append(PolicyResult(id=str(uuid.uuid4()), data=p))
+                continue
+                
+            key = (p.payer.lower().strip(), p.drug_name.lower().strip())
+            if key not in seen:
+                results.append(PolicyResult(id=str(uuid.uuid4()), data=p))
+                seen.add(key)
             
         return SearchResponse(results=results)
         

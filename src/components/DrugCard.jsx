@@ -4,6 +4,8 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function DrugCard({ policy, index }) {
   const [expanded, setExpanded] = useState(false);
+  const [showFullCriteria, setShowFullCriteria] = useState(false);
+  const [showFullIndications, setShowFullIndications] = useState(false);
 
   return (
     <div
@@ -171,12 +173,23 @@ export default function DrugCard({ policy, index }) {
                     textTransform: 'uppercase',
                     color: 'var(--fg-3)',
                     marginBottom: '0.6rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
                   }}
                 >
-                  Indications
+                  <span>Indications</span>
+                  {policy.covered_indications.length > 3 && (
+                    <button
+                      onClick={() => setShowFullIndications(!showFullIndications)}
+                      style={{ background: 'none', border: 'none', padding: 0, fontFamily: 'var(--font-mono)', fontSize: '0.55rem', color: 'var(--fg-3)', textDecoration: 'underline', cursor: 'pointer', opacity: 0.7 }}
+                    >
+                      {showFullIndications ? 'Show less' : `+${policy.covered_indications.length - 3} more`}
+                    </button>
+                  )}
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  {policy.covered_indications.map((ind, i) => (
+                  {(showFullIndications ? policy.covered_indications : policy.covered_indications.slice(0, 3)).map((ind, i) => (
                     <li
                       key={i}
                       style={{
@@ -206,28 +219,75 @@ export default function DrugCard({ policy, index }) {
                     textTransform: 'uppercase',
                     color: 'var(--fg-3)',
                     marginBottom: '0.6rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
                   }}
                 >
-                  PA Criteria
-                </div>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  {policy.pa_criteria.map((c, i) => (
-                    <li
-                      key={i}
+                  <span>PA Criteria</span>
+                  {(policy.pa_criteria_summary || policy.pa_criteria?.length > 3) && (
+                    <button
+                      onClick={() => setShowFullCriteria(!showFullCriteria)}
                       style={{
-                        display: 'flex',
-                        gap: '0.5rem',
-                        fontFamily: 'var(--font-body)',
-                        fontSize: '0.82rem',
-                        color: 'var(--fg-2)',
-                        lineHeight: 1.5,
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.55rem',
+                        letterSpacing: '0.05em',
+                        color: 'var(--fg-3)',
+                        textDecoration: 'underline',
+                        cursor: 'pointer',
+                        opacity: 0.7,
+                        transition: 'opacity 0.2s ease'
                       }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                      onMouseLeave={e => e.currentTarget.style.opacity = 0.7}
                     >
-                      <span style={{ color: 'var(--fg-3)', flexShrink: 0 }}>›</span>
-                      {c}
-                    </li>
-                  ))}
-                </ul>
+                      {showFullCriteria ? 'Show summary only' : (policy.pa_criteria_summary ? 'View full requirements' : `View all ${policy.pa_criteria.length} requirements`)}
+                    </button>
+                  )}
+                </div>
+                
+                {(!showFullCriteria && policy.pa_criteria_summary) ? (
+                  <p style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '0.82rem',
+                    color: 'var(--fg-2)',
+                    lineHeight: 1.6,
+                    margin: 0,
+                    padding: '0.75rem 0.85rem',
+                    background: 'var(--bg-2)',
+                    borderLeft: '2px solid var(--border-strong)',
+                    borderRadius: '0 var(--radius-sm) var(--radius-sm) 0'
+                  }}>
+                    {policy.pa_criteria_summary}
+                  </p>
+                ) : (
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    {(showFullCriteria ? policy.pa_criteria : policy.pa_criteria.slice(0, 3)).map((c, i) => (
+                      <li
+                        key={i}
+                        style={{
+                          display: 'flex',
+                          gap: '0.5rem',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '0.82rem',
+                          color: 'var(--fg-2)',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        <span style={{ color: 'var(--fg-3)', flexShrink: 0 }}>›</span>
+                        {c}
+                      </li>
+                    ))}
+                    {!showFullCriteria && policy.pa_criteria.length > 3 && !policy.pa_criteria_summary && (
+                      <li style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'var(--fg-3)', paddingLeft: '1.25rem', fontStyle: 'italic' }}>
+                        ... and {policy.pa_criteria.length - 3} more requirements
+                      </li>
+                    )}
+                  </ul>
+                )}
               </div>
             )}
 
@@ -252,9 +312,19 @@ export default function DrugCard({ policy, index }) {
                 >
                   Step Therapy Details
                 </div>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-2)', margin: 0 }}>
-                  {policy.step_therapy_details}
-                </p>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-2)', lineHeight: 1.6 }}>
+                  {Array.isArray(policy.step_therapy_details) ? (
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      {policy.step_therapy_details.map((s, i) => (
+                        <li key={i} style={{ display: 'flex', gap: '0.5rem' }}>
+                          <span style={{ color: 'var(--danger)', opacity: 0.6 }}>›</span> {s}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p style={{ margin: 0 }}>{policy.step_therapy_details}</p>
+                  )}
+                </div>
               </div>
             )}
           </div>

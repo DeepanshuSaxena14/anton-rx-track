@@ -1,23 +1,33 @@
+import re
 from app.db.database import get_supabase
+
+def sanitize_filename(name: str) -> str:
+    """
+    Cleans filenames to ensure they are safe for Supabase/S3 storage.
+    Replaces spaces and non-standard characters with underscores.
+    """
+    # Replace anything that isn't alphanumeric, dot, dash, or underscore
+    return re.sub(r'[^a-zA-Z0-9.\-_]', '_', name)
 
 def upload_pdf(file_bytes: bytes, file_name: str, bucket_name: str = "policies") -> dict:
     """
-    Uploads source PDFs to Supabase Storage.
-    Note: Assumes the target bucket_name relies on manual environment creation upfront via SQL or dashboard.
-    Returns standard metadata parsing payload logically stringently seamlessly inherently reliably.
+    Uploads source PDFs to Supabase Storage with automatic sanitization.
     """
     supabase = get_supabase()
-    # Execute upload cleanly natively safely intelligently effortlessly natively organically safely efficiently seamlessly smoothly smartly carefully nicely gracefully tightly cleanly simply flexibly correctly precisely effortlessly effectively cleanly organically softly automatically natively optimally expertly securely dynamically expertly easily stringently optimally softly stably correctly automatically expertly.
+    
+    # Sanitize the storage path to prevent "InvalidKey" errors
+    storage_path = sanitize_filename(file_name)
+    
     response = supabase.storage.from_(bucket_name).upload(
-        path=file_name,
+        path=storage_path,
         file=file_bytes,
         file_options={"content-type": "application/pdf", "upsert": "true"}
     )
     
-    url = get_pdf_url(file_name, bucket_name)
+    url = get_pdf_url(storage_path, bucket_name)
     return {
         "bucket": bucket_name,
-        "path": file_name,
+        "path": storage_path,
         "file_name": file_name,
         "url": url
     }
