@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Search, Upload, GitCompare, Clock, Trophy, Radio } from 'lucide-react';
+import { Search, Upload, GitCompare, Clock } from 'lucide-react';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -8,38 +8,26 @@ export default function Home() {
     {
       name: 'Search',
       icon: Search,
-      desc: 'Find which plans cover any drug and what PA they require',
+      desc: 'Which health plans cover Drug X? Instant results across all payers with PA requirements and coverage status.',
       path: '/search'
     },
     {
       name: 'Upload',
       icon: Upload,
-      desc: 'Ingest a new payer policy PDF and extract all 12 structured fields',
+      desc: 'Drop a payer policy PDF. AI extracts all 12 structured fields in seconds — drug name, HCPCS code, PA criteria, step therapy, site of care.',
       path: '/upload'
     },
     {
       name: 'Compare',
       icon: GitCompare,
-      desc: 'Side-by-side normalized comparison of two payers for the same drug',
+      desc: 'Side-by-side normalized comparison of two payers for the same drug. Differing fields highlighted automatically.',
       path: '/compare'
     },
     {
       name: 'Changes',
       icon: Clock,
-      desc: 'Color-coded timeline of what changed across policies this quarter',
+      desc: 'Color-coded timeline of what changed across payer policies this quarter — coverage added, restrictions tightened, criteria updated.',
       path: '/changes'
-    },
-    {
-      name: 'Leaderboard',
-      icon: Trophy,
-      desc: 'Ranked view of payers by how restrictive their approval process is',
-      path: '/leaderboard'
-    },
-    {
-      name: 'Monitor',
-      icon: Radio,
-      desc: 'Proactive alerts when payer policies are updated',
-      path: '/monitor'
     }
   ];
 
@@ -78,7 +66,7 @@ export default function Home() {
       </div>
 
       {/* Feature Navigation Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 max-w-5xl mx-auto mb-20">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 max-w-4xl mx-auto mb-20">
         {features.map((f, i) => {
           const Icon = f.icon;
           return (

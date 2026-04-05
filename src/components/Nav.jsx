@@ -6,8 +6,6 @@ import {
   Upload,
   GitCompare,
   Clock,
-  Trophy,
-  Radio,
   Brain,
 } from 'lucide-react'
 
@@ -19,8 +17,6 @@ const navItems = [
   { to: '/upload', label: 'Upload', icon: Upload },
   { to: '/compare', label: 'Compare', icon: GitCompare },
   { to: '/changes', label: 'Changes', icon: Clock },
-  { to: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-  { to: '/monitor', label: 'Monitor', icon: Radio },
 ]
 
 export default function Nav() {
