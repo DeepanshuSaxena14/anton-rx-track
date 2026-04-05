@@ -40,37 +40,45 @@ SITE_OF_CARE_MAP = {
 }
 
 DRUG_ALIAS_MAP = {
-    "keytruda": {
-        "drug_name": "pembrolizumab",
-        "brand_name": "Keytruda",
-        "hcpcs_code": "J9271",
-    },
-    "pembrolizumab": {
-        "drug_name": "pembrolizumab",
-        "brand_name": "Keytruda",
-        "hcpcs_code": "J9271",
-    },
-    "j9271": {
-        "drug_name": "pembrolizumab",
-        "brand_name": "Keytruda",
-        "hcpcs_code": "J9271",
-    },
-    "dupixent": {
-        "drug_name": "dupilumab",
-        "brand_name": "Dupixent",
-        "hcpcs_code": "J0173",
-    },
-    "dupilumab": {
-        "drug_name": "dupilumab",
-        "brand_name": "Dupixent",
-        "hcpcs_code": "J0173",
-    },
-    "j0173": {
-        "drug_name": "dupilumab",
-        "brand_name": "Dupixent",
-        "hcpcs_code": "J0173",
-    },
+    # Bevacizumab family
+    "avastin": {"drug_name": "bevacizumab", "brand_name": "Avastin", "hcpcs_code": "J9035"},
+    "bevacizumab": {"drug_name": "bevacizumab", "brand_name": "Avastin", "hcpcs_code": "J9035"},
+    "j9035": {"drug_name": "bevacizumab", "brand_name": "Avastin", "hcpcs_code": "J9035"},
+    "mvasi": {"drug_name": "bevacizumab", "brand_name": "Avastin", "hcpcs_code": "J9035"},
+    "zirabev": {"drug_name": "bevacizumab", "brand_name": "Avastin", "hcpcs_code": "J9035"},
+    "alymsys": {"drug_name": "bevacizumab", "brand_name": "Avastin", "hcpcs_code": "J9035"},
+    "avzivi": {"drug_name": "bevacizumab", "brand_name": "Avastin", "hcpcs_code": "J9035"},
+    "vegzelma": {"drug_name": "bevacizumab", "brand_name": "Avastin", "hcpcs_code": "J9035"},
+    "jobevne": {"drug_name": "bevacizumab", "brand_name": "Avastin", "hcpcs_code": "J9035"},
+
+    # Rituximab family
+    "rituxan": {"drug_name": "rituximab", "brand_name": "Rituxan", "hcpcs_code": "J9312"},
+    "rituximab": {"drug_name": "rituximab", "brand_name": "Rituxan", "hcpcs_code": "J9312"},
+    "j9312": {"drug_name": "rituximab", "brand_name": "Rituxan", "hcpcs_code": "J9312"},
+    "truxima": {"drug_name": "rituximab", "brand_name": "Rituxan", "hcpcs_code": "J9312"},
+    "ruxiance": {"drug_name": "rituximab", "brand_name": "Rituxan", "hcpcs_code": "J9312"},
+    "riabni": {"drug_name": "rituximab", "brand_name": "Rituxan", "hcpcs_code": "J9312"},
+
+    # Trastuzumab family
+    "herceptin": {"drug_name": "trastuzumab", "brand_name": "Herceptin", "hcpcs_code": "J9355"},
+    "trastuzumab": {"drug_name": "trastuzumab", "brand_name": "Herceptin", "hcpcs_code": "J9355"},
+    "j9355": {"drug_name": "trastuzumab", "brand_name": "Herceptin", "hcpcs_code": "J9355"},
+    "kanjinti": {"drug_name": "trastuzumab", "brand_name": "Herceptin", "hcpcs_code": "J9355"},
+    "ogivri": {"drug_name": "trastuzumab", "brand_name": "Herceptin", "hcpcs_code": "J9355"},
+    "trazimera": {"drug_name": "trastuzumab", "brand_name": "Herceptin", "hcpcs_code": "J9355"},
+    "herzuma": {"drug_name": "trastuzumab", "brand_name": "Herceptin", "hcpcs_code": "J9355"},
+    "ontruzant": {"drug_name": "trastuzumab", "brand_name": "Herceptin", "hcpcs_code": "J9355"},
+    "hercessi": {"drug_name": "trastuzumab", "brand_name": "Herceptin", "hcpcs_code": "J9355"},
+
+    # Keytruda/Dupixent families
+    "keytruda": {"drug_name": "pembrolizumab", "brand_name": "Keytruda", "hcpcs_code": "J9271"},
+    "pembrolizumab": {"drug_name": "pembrolizumab", "brand_name": "Keytruda", "hcpcs_code": "J9271"},
+    "j9271": {"drug_name": "pembrolizumab", "brand_name": "Keytruda", "hcpcs_code": "J9271"},
+    "dupixent": {"drug_name": "dupilumab", "brand_name": "Dupixent", "hcpcs_code": "J0173"},
+    "dupilumab": {"drug_name": "dupilumab", "brand_name": "Dupixent", "hcpcs_code": "J0173"},
+    "j0173": {"drug_name": "dupilumab", "brand_name": "Dupixent", "hcpcs_code": "J0173"},
 }
+
 
 
 def _clean(value: str | None) -> str | None:

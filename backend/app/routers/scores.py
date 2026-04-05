@@ -1,8 +1,16 @@
+from typing import List
 from fastapi import APIRouter, Query, HTTPException
 from app.schemas import ScoresResponse, PayerScore
-from app.services import p2_fetch_rankings
+from app.services import p2_fetch_rankings, p2_fetch_unique_scored_drugs
 
 router = APIRouter(prefix="/scores", tags=["scores"])
+
+@router.get("/drugs", response_model=List[str])
+async def get_scored_drugs():
+    """
+    Returns unique drug names that have existing scores in the system.
+    """
+    return p2_fetch_unique_scored_drugs()
 
 @router.get("", response_model=ScoresResponse)
 async def get_scores(

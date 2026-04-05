@@ -12,11 +12,20 @@ from app.ai.scorer import score_policy as ai_score
 from app.ai.appeal import generate_appeal_letter as ai_generate_appeal_letter
 
 from app.db.storage import upload_pdf
-from app.db.policies import insert_policy, get_policies_by_drug, get_all_policies
+from app.db.policies import insert_policy, get_policies_by_drug, get_all_policies, get_unique_payers, get_unique_drugs, get_policy_by_payer_and_drug
 from app.db.versions import insert_policy_version, get_versions_by_payer_and_drug
 from app.db.embeddings import insert_embeddings, search_similar_chunks
-from app.db.scores import insert_payer_score, get_payer_rankings_for_drug
+from app.db.scores import insert_payer_score, get_payer_rankings_for_drug, get_unique_scored_drugs
 from app.db.normalizer import normalize_policy_payload
+
+def p2_fetch_unique_payers() -> List[str]:
+    return get_unique_payers()
+
+def p2_fetch_unique_drugs() -> List[str]:
+    return get_unique_drugs()
+
+def p2_fetch_unique_scored_drugs() -> List[str]:
+    return get_unique_scored_drugs()
 
 def p1_extract_policy(text: str) -> List[Dict]:
     res = ai_extract(text)
@@ -159,13 +168,29 @@ def p2_store_score(record_id: str, payer: str, drug_name: str, score_data: Dict[
 def p2_fetch_policies_by_drug(drug_name: str = None, brand_name: str = None, hcpcs_code: str = None, payer: str = None) -> List[PolicyData]:
     # Pass search routing back down natively
     query = drug_name or brand_name or hcpcs_code or "Unknown"
-    records = get_policies_by_drug(query)
+    
+    if payer:
+        # Strict mode: Only get the LATEST entry for this specific payer to prevent UI duplication in Compare/Changes
+        record = get_policy_by_payer_and_drug(payer, query)
+        records = [record] if record else []
+    else:
+        # General search mode: Return all matches (aliasing handled by P2 DB)
+        records = get_policies_by_drug(query)
     
     mapped = []
     valid_keys = PolicyData.model_fields.keys()
     for r in records:
         # Filter out DB-only fields like 'id', 'policy_hash', etc.
         clean_r = {k: v for k, v in r.items() if k in valid_keys}
+        
+        # Type Safeguard for step_therapy_details (might be stringified JSON)
+        st_details = clean_r.get("step_therapy_details")
+        if isinstance(st_details, str) and st_details.startswith("["):
+            try:
+                clean_r["step_therapy_details"] = json.loads(st_details)
+            except Exception:
+                pass
+                
         mapped.append(PolicyData(**clean_r))
     return mapped
 

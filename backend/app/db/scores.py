@@ -31,8 +31,31 @@ def get_payer_rankings_for_drug(drug_query: str) -> list[dict]:
     response = (
         supabase.table("policy_scores")
         .select("*")
-        .or_(f"drug_name.ilike.%{drug_name}%,drug_name.ilike.%{brand_name}%,drug_name.ilike.%{hcpcs_code}%")
-        .order("score", desc=True) 
+        .or_(
+            f"drug_name.ilike.%{drug_name}%,drug_name.ilike.%{brand_name}%,drug_name.ilike.%{hcpcs_code}%"
+        )
+        .order("created_at", desc=True)
         .execute()
     )
-    return response.data
+
+    # Deduplicate in Python: Only keep the LATEST record per unique payer identity.
+    deduplicated = {}
+    for r in response.data:
+        p_name = (r.get("payer") or "Unknown").strip()
+        if p_name not in deduplicated:
+            deduplicated[p_name] = r
+
+    return list(deduplicated.values())
+
+
+def get_unique_scored_drugs():
+    """
+    Returns a unique list of all drugs currently stored in the policy_scores records logic.
+    Only drugs that have been successfully scored will appear here.
+    """
+    supabase = get_supabase()
+    response = supabase.table("policy_scores").select("drug_name").execute()
+    # Unique set of drug names
+    drugs = sorted(list(set(r["drug_name"] for r in response.data if r.get("drug_name"))))
+    return drugs
+

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { comparePolicies } from '../api/client';
-import { DRUGS, PAYERS } from '../mocks/mockData';
+import { comparePolicies, getPayers, getDrugs } from '../api/client';
 import { Spinner, EmptyState, CoverageBadge, ScoreDots, HcpcsPill, SiteOfCareTags } from '../components/ui';
 
 const valuesDiffer = (a, b) => JSON.stringify(a) !== JSON.stringify(b);
@@ -21,21 +20,51 @@ const selectStyle = {
 };
 
 export default function Compare() {
-  const [drug, setDrug] = useState(DRUGS[0]);
-  const [payerA, setPayerA] = useState(PAYERS[0]);
-  const [payerB, setPayerB] = useState(PAYERS[1] || PAYERS[0]);
+  const [availablePayers, setAvailablePayers] = useState([]);
+  const [availableDrugs, setAvailableDrugs] = useState([]);
+  
+  const [drug, setDrug] = useState('');
+  const [payerA, setPayerA] = useState('');
+  const [payerB, setPayerB] = useState('');
+  
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [resourcesLoading, setResourcesLoading] = useState(true);
+
+  // Load unique payers and drugs on mount
+  useEffect(() => {
+    async function loadResources() {
+      try {
+        const [payers, drugs] = await Promise.all([getPayers(), getDrugs()]);
+        setAvailablePayers(payers);
+        setAvailableDrugs(drugs);
+        
+        // Set initial selection if available
+        if (drugs.length > 0) setDrug(drugs[0]);
+        if (payers.length > 0) setPayerA(payers[0]);
+        if (payers.length > 1) setPayerB(payers[1]);
+        else if (payers.length > 0) setPayerB(payers[0]);
+        
+      } catch (err) {
+        console.error('Core: Resource discovery failed:', err);
+      } finally {
+        setResourcesLoading(false);
+      }
+    }
+    loadResources();
+  }, []);
 
   useEffect(() => {
     const fetchComparison = async () => {
+      if (!drug || !payerA || !payerB) return;
+      
       setLoading(true);
       try {
         const result = await comparePolicies(drug, payerA, payerB);
-        // Map backend list to the policyA/B object format expected by the component
+        // Map backend list to the policyA/B object format by finding matching payer names
         setData({
-          policyA: result.comparison?.[0] || null,
-          policyB: result.comparison?.[1] || null
+          policyA: result.comparison?.find(p => p.payer === payerA) || null,
+          policyB: result.comparison?.find(p => p.payer === payerB) || null
         });
       } catch (err) {
         console.error(err);
@@ -43,8 +72,10 @@ export default function Compare() {
         setLoading(false);
       }
     };
-    fetchComparison();
-  }, [drug, payerA, payerB]);
+    if (!resourcesLoading) {
+      fetchComparison();
+    }
+  }, [drug, payerA, payerB, resourcesLoading]);
 
   const fields = [
     { key: 'coverage_status', label: 'Coverage' },
@@ -59,7 +90,7 @@ export default function Compare() {
   ];
 
   const renderValue = (key, value) => {
-    if (value === null || value === undefined || value === '') {
+    if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
       return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--fg-3)', letterSpacing: '0.05em' }}>—</span>;
     }
     if (key === 'coverage_status') return <CoverageBadge status={value} />;
@@ -77,7 +108,6 @@ export default function Compare() {
       return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'var(--fg-2)' }}>{new Date(value).toISOString().split('T')[0]}</span>;
     }
     if (Array.isArray(value)) {
-      if (value.length === 0) return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--fg-3)' }}>—</span>;
       return (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
           {value.map((item, idx) => (
@@ -94,6 +124,14 @@ export default function Compare() {
   let diffCount = 0;
   if (data?.policyA && data?.policyB) {
     fields.forEach((f) => { if (valuesDiffer(data.policyA[f.key], data.policyB[f.key])) diffCount++; });
+  }
+
+  if (resourcesLoading) {
+    return (
+      <div style={{ padding: '10rem 0', display: 'flex', justifyContent: 'center' }}>
+        <Spinner label="Loading matrix filters..." />
+      </div>
+    );
   }
 
   return (
@@ -118,16 +156,20 @@ export default function Compare() {
       {/* Controls */}
       <div style={{ maxWidth: '700px', margin: '0 auto 2.5rem', background: 'var(--bg-2)', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-card)', padding: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' }}>
         {[
-          { label: 'Drug', value: drug, set: setDrug, options: DRUGS },
-          { label: 'Payer A', value: payerA, set: setPayerA, options: PAYERS },
-          { label: 'Payer B', value: payerB, set: setPayerB, options: PAYERS },
+          { label: 'Drug', value: drug, set: setDrug, options: availableDrugs },
+          { label: 'Payer A', value: payerA, set: setPayerA, options: availablePayers },
+          { label: 'Payer B', value: payerB, set: setPayerB, options: availablePayers },
         ].map(({ label, value, set, options }) => (
           <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             <label style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>
               {label}
             </label>
             <select value={value} onChange={(e) => set(e.target.value)} style={selectStyle}>
-              {options.map((o) => <option key={o} value={o}>{o}</option>)}
+              {options.length === 0 ? (
+                <option value="">No data ingested</option>
+              ) : (
+                options.map((o) => <option key={o} value={o}>{o}</option>)
+              )}
             </select>
           </div>
         ))}
@@ -138,11 +180,11 @@ export default function Compare() {
         <div style={{ padding: '5rem 0', display: 'flex', justifyContent: 'center' }}>
           <Spinner label="Comparing policies..." />
         </div>
-      ) : data && (!data.policyA || !data.policyB) ? (
+      ) : data && (!data.policyA && !data.policyB) ? (
         <div style={{ maxWidth: '420px', margin: '0 auto' }}>
-          <EmptyState title="No data found" subtitle="No policies found for this combination. Try different parameters." />
+          <EmptyState title="No data found" subtitle="Neither payer has a policy for this combination. Try different parameters." />
         </div>
-      ) : data?.policyA && data?.policyB ? (
+      ) : data ? (
         <div>
           {/* Diff count banner */}
           {diffCount > 0 && (
@@ -159,13 +201,13 @@ export default function Compare() {
             {/* Column headers */}
             <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr 1fr', borderBottom: '1px solid var(--border)' }}>
               <div style={{ background: 'var(--bg-2)', padding: '1rem' }} />
-              {[data.policyA, data.policyB].map((policy, i) => (
+              {[ {payer: payerA, policy: data.policyA}, {payer: payerB, policy: data.policyB} ].map((col, i) => (
                 <div key={i} style={{ background: 'var(--bg-2)', padding: '1.25rem', textAlign: 'center', borderLeft: '1px solid var(--border)' }}>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-3)', marginBottom: '0.35rem' }}>
-                    {policy.payer}
+                    {col.payer}
                   </div>
-                  <div style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: '1rem', color: 'var(--fg)' }}>
-                    {policy.drug_name}
+                  <div style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: '1rem', color: col.policy ? 'var(--fg)' : 'var(--fg-3)' }}>
+                    {col.policy ? col.policy.drug_name : 'No policy found'}
                   </div>
                 </div>
               ))}
@@ -173,9 +215,9 @@ export default function Compare() {
 
             {/* Field rows */}
             {fields.map((f) => {
-              const valA = data.policyA[f.key];
-              const valB = data.policyB[f.key];
-              const differ = valuesDiffer(valA, valB);
+              const valA = data.policyA ? data.policyA[f.key] : null;
+              const valB = data.policyB ? data.policyB[f.key] : null;
+              const differ = data.policyA && data.policyB ? valuesDiffer(valA, valB) : false;
               return (
                 <div
                   key={f.key}
