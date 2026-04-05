@@ -26,3 +26,27 @@ dist-ssr
 # Packages
 package-lock.json
 packagelog.json
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.toast
+.lucid
+.pytest_cache/
+.coverage
+.cache
+.mypy_cache/
+.ruff_cache/
