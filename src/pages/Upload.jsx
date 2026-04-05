@@ -7,6 +7,7 @@ export default function Upload() {
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState('idle');
   const [result, setResult] = useState(null);
+  const [extractedCount, setExtractedCount] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const fileInputRef = useRef(null);
@@ -15,6 +16,7 @@ export default function Upload() {
     setFile(null);
     setStatus('idle');
     setResult(null);
+    setExtractedCount(0);
     setDragging(false);
     setErrorMsg(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -23,7 +25,12 @@ export default function Upload() {
   const handleFile = (selectedFile) => {
     if (!selectedFile) return;
     if (selectedFile.type !== 'application/pdf') {
-      setErrorMsg('SYS_ERR: Invalid payload type. Require application/pdf.');
+      setErrorMsg('Invalid file type. Please upload a PDF document.');
+      setFile(null);
+      return;
+    }
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setErrorMsg('File is too large. Maximum allowed size is 10 MB.');
       setFile(null);
       return;
     }
@@ -31,21 +38,12 @@ export default function Upload() {
     setFile(selectedFile);
   };
 
-  const onDragOver = (e) => {
-    e.preventDefault();
-    setDragging(true);
-  };
-
-  const onDragLeave = (e) => {
-    e.preventDefault();
-    setDragging(false);
-  };
-
+  const onDragOver = (e) => { e.preventDefault(); setDragging(true); };
+  const onDragLeave = (e) => { e.preventDefault(); setDragging(false); };
   const onDrop = (e) => {
     e.preventDefault();
     setDragging(false);
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) handleFile(droppedFile);
+    handleFile(e.dataTransfer.files[0]);
   };
 
   const handleUpload = async () => {
@@ -53,10 +51,18 @@ export default function Upload() {
     setStatus('processing');
     try {
       const data = await ingestPDF(file);
-      setResult(data.policy);
+      if (data.status === 'error') {
+        setErrorMsg(data.errors?.[0] || data.message || 'Extraction failed.');
+        setStatus('error');
+        return;
+      }
+      const extracted = data.policies_extracted || (data.policy ? [data.policy] : []);
+      setExtractedCount(extracted.length);
+      setResult(extracted[0] || null);
       setStatus('success');
     } catch (err) {
       console.error(err);
+      setErrorMsg('An error occurred while processing this file.');
       setStatus('error');
     }
   };
@@ -67,178 +73,232 @@ export default function Upload() {
     return bytes + ' B';
   };
 
+  const labelStyle = {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.6rem',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: 'var(--fg-3)',
+    display: 'block',
+    marginBottom: '0.3rem',
+  };
+
+  const valueStyle = {
+    fontFamily: 'var(--font-body)',
+    fontSize: '0.9rem',
+    fontWeight: 500,
+    color: 'var(--fg)',
+  };
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
-      <div className="text-center mb-12 fade-up">
-        <h1 className="font-display text-4xl sm:text-5xl font-light text-[var(--fg)] mb-4">
-          Data Ingestion
+    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '5rem 1.5rem 3rem' }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <h1 style={{ fontFamily: 'var(--font-body)', fontWeight: 300, fontSize: 'clamp(2rem, 5vw, 3rem)', color: 'var(--fg)', letterSpacing: '-0.02em', margin: '0 0 0.6rem' }}>
+          Policy Ingestion
         </h1>
-        <p className="font-mono text-[var(--accent)] text-sm uppercase tracking-widest max-w-xl mx-auto">
-          AI-driven matrix extraction core
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.9rem', color: 'var(--fg-3)', margin: 0 }}>
+          Upload a payer PDF and extract all 12 policy fields automatically
         </p>
       </div>
 
-      {status !== 'success' && status !== 'processing' && status !== 'error' && (
-        <div className="max-w-xl mx-auto fade-up fade-up-delay-1">
+      {/* Upload zone */}
+      {status !== 'success' && status !== 'processing' && (
+        <div style={{ maxWidth: '520px', margin: '0 auto' }}>
           <div
-            className={`relative flex flex-col items-center justify-center p-16 mt-4 border border-dashed rounded-lg cursor-pointer transition-colors ${
-              dragging
-                ? 'border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]'
-                : 'border-[var(--border)] bg-[var(--bg-2)] hover:border-[var(--accent)]'
-            }`}
             onClick={() => fileInputRef.current?.click()}
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
             onDrop={onDrop}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '3.5rem 2rem',
+              background: dragging ? 'var(--bg-3)' : 'var(--bg-2)',
+              border: `2px dashed ${dragging ? 'var(--fg)' : 'var(--border-strong)'}`,
+              borderRadius: 'var(--radius-card)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
           >
             <input
               type="file"
               accept=".pdf"
               ref={fileInputRef}
               onChange={(e) => handleFile(e.target.files[0])}
-              className="hidden"
+              style={{ display: 'none' }}
             />
-            
+
             {file ? (
-              <div className="flex flex-col items-center text-center">
-                <FileIcon className="h-10 w-10 text-[var(--accent)] mb-4" />
-                <span className="text-[var(--fg)] font-mono text-sm tracking-wide mb-2 uppercase">{file.name}</span>
-                <span className="font-mono text-xs text-[var(--muted)] tracking-widest">{formatSize(file.size)}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center' }}>
+                <FileIcon style={{ width: '2rem', height: '2rem', color: 'var(--fg-2)' }} />
+                <span style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: '0.9rem', color: 'var(--fg)' }}>
+                  {file.name}
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', letterSpacing: '0.08em', color: 'var(--fg-3)', textTransform: 'uppercase' }}>
+                  {formatSize(file.size)} · PDF
+                </span>
               </div>
             ) : (
-              <div className="flex flex-col items-center text-center">
-                <UploadCloud className="h-10 w-10 text-[var(--muted)] mb-4 group-hover:text-[var(--accent)] transition-colors" />
-                <p className="text-[var(--fg)] font-mono text-sm tracking-widest mb-2 uppercase">Mount PDF Payload</p>
-                <p className="font-mono text-xs text-[var(--muted)] tracking-widest uppercase">Click or drop file</p>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', textAlign: 'center' }}>
+                <div style={{ width: '3rem', height: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-3)', border: '1px solid var(--border-strong)', borderRadius: '0.75rem' }}>
+                  <UploadCloud style={{ width: '1.3rem', height: '1.3rem', color: 'var(--fg-3)' }} />
+                </div>
+                <div>
+                  <p style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: '0.9rem', color: 'var(--fg)', margin: '0 0 0.25rem' }}>
+                    Drop a PDF here
+                  </p>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'var(--fg-3)', margin: 0 }}>
+                    or click to browse — up to 10 MB
+                  </p>
+                </div>
               </div>
             )}
           </div>
 
-          {errorMsg && (
-            <div className="flex items-center gap-3 mt-6 text-rose-400 text-xs font-mono uppercase tracking-widest p-4 bg-[var(--bg-2)] border border-[color-mix(in_srgb,transparent_80%,#f43f5e)] rounded">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {errorMsg}
+          {/* Validation error */}
+          {errorMsg && status !== 'error' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '1rem', padding: '0.75rem 1rem', background: 'rgba(143,42,42,0.05)', border: '1px solid rgba(143,42,42,0.18)', borderRadius: 'var(--radius-sm)' }}>
+              <AlertCircle style={{ width: '0.9rem', height: '0.9rem', flexShrink: 0, color: 'var(--danger)' }} />
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--danger)' }}>
+                {errorMsg}
+              </span>
             </div>
           )}
 
+          {/* Upload button */}
           {file && !errorMsg && (
-            <div className="mt-8 animate-in fade-in slide-in-from-bottom-2 duration-300 relative group">
-              <button
-                onClick={handleUpload}
-                className="w-full bg-[var(--accent)] hover:bg-[var(--accent-2)] text-[var(--bg)] font-mono text-sm uppercase tracking-widest py-4 px-4 transition-all rounded shadow-md"
-              >
-                Extract Structured Matrix
-              </button>
-            </div>
+            <button
+              onClick={handleUpload}
+              style={{
+                width: '100%',
+                marginTop: '1.25rem',
+                background: 'var(--fg)',
+                color: 'var(--bg)',
+                fontFamily: 'var(--font-body)',
+                fontWeight: 500,
+                fontSize: '0.9rem',
+                padding: '0.85rem',
+                borderRadius: 'var(--radius-pill)',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background 0.15s ease, transform 0.15s ease',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-hover)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--fg)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+            >
+              Extract Policy Data
+            </button>
           )}
         </div>
       )}
 
+      {/* Processing */}
       {status === 'processing' && (
-        <div className="max-w-md mx-auto py-16 flex flex-col items-center fade-up font-mono">
-          <Spinner label="Parsing Payload..." size={40} />
-          <p className="text-[var(--muted)] text-xs mb-12 text-center uppercase tracking-widest mt-8">
-            Routing through Gemini 2.5 Flash
-          </p>
-
-          <div className="w-full space-y-4">
-            {['Payer Hash', 'Drug Identity', 'Coverage Vector', 'PA Matrix', 'Step Constraints', 'Care Location'].map((field) => (
-              <div key={field} className="flex items-center justify-between p-4 border border-[var(--border)] bg-[var(--bg-2)] rounded shimmer overflow-hidden relative">
-                <span className="text-[10px] font-mono tracking-widest text-[var(--fg)] uppercase relative z-10">{field}</span>
+        <div style={{ maxWidth: '420px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 0' }}>
+          <Spinner label="Extracting policy data..." size={36} />
+          <div style={{ width: '100%', marginTop: '2.5rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            {['Payer', 'Drug Identity', 'Coverage Status', 'PA Requirements', 'Step Therapy', 'Site of Care'].map((field) => (
+              <div key={field} className="shimmer" style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>
+                  {field}
+                </span>
               </div>
             ))}
           </div>
         </div>
       )}
 
+      {/* Error */}
       {status === 'error' && (
-        <div className="max-w-md mx-auto mt-12 bg-[var(--bg-2)] border border-[color-mix(in_srgb,transparent_80%,#f43f5e)] p-8 text-center fade-up rounded-lg">
-          <div className="mx-auto w-12 h-12 flex items-center justify-center bg-[color-mix(in_srgb,transparent_90%,#f43f5e)] mb-6 rounded-full">
-            <XCircle className="h-6 w-6 text-rose-400" />
+        <div style={{ maxWidth: '420px', margin: '0 auto', background: 'var(--bg-2)', border: '1px solid rgba(143,42,42,0.2)', borderRadius: 'var(--radius-card)', padding: '2.5rem', textAlign: 'center' }}>
+          <div style={{ width: '3rem', height: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(143,42,42,0.07)', border: '1px solid rgba(143,42,42,0.2)', borderRadius: '50%', margin: '0 auto 1.25rem' }}>
+            <XCircle style={{ width: '1.3rem', height: '1.3rem', color: 'var(--danger)' }} />
           </div>
-          <h3 className="text-lg font-mono text-rose-400 uppercase tracking-widest font-bold mb-3">Extraction Aborted</h3>
-          <p className="text-[var(--muted)] text-xs font-mono uppercase tracking-widest leading-relaxed mb-8">
-            Payload unrecognized. Unstructured scan failure parsing PDF blob.
+          <h3 style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: '1rem', color: 'var(--danger)', margin: '0 0 0.5rem' }}>
+            Extraction failed
+          </h3>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--fg-3)', margin: '0 0 1.5rem', lineHeight: 1.6 }}>
+            {errorMsg || 'Unable to extract data from this PDF. Please check the file and try again.'}
           </p>
           <button
             onClick={reset}
-            className="text-rose-400 text-xs font-mono uppercase tracking-widest hover:text-rose-300 transition-colors border-b border-rose-400/50 pb-1"
+            style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: '0.85rem', color: 'var(--fg)', background: 'transparent', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-pill)', padding: '0.55rem 1.5rem', cursor: 'pointer' }}
           >
-            Remount Payload
+            Try again
           </button>
         </div>
       )}
 
+      {/* Success */}
       {status === 'success' && result && (
-        <div className="max-w-3xl mx-auto fade-up">
-          <div className="flex flex-col items-center justify-center mb-10">
-            <div className="w-12 h-12 flex items-center justify-center bg-[var(--accent)] mb-6 rounded-full text-[var(--bg)] shadow-[0_0_15px_var(--accent)]">
-              <CheckCircle className="h-6 w-6" />
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
+            <div style={{ width: '3rem', height: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(26,122,74,0.08)', border: '1px solid rgba(26,122,74,0.25)', borderRadius: '50%', marginBottom: '1rem' }}>
+              <CheckCircle style={{ width: '1.3rem', height: '1.3rem', color: 'var(--success)' }} />
             </div>
-            <h2 className="text-xl font-mono text-[var(--accent)] tracking-widest uppercase font-semibold">Matrix Extracted</h2>
+            <h2 style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: '1.1rem', color: 'var(--success)', margin: '0 0 0.25rem' }}>
+              Extraction complete
+            </h2>
+            {extractedCount > 1 && (
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-3)', margin: 0 }}>
+                {extractedCount} records extracted
+              </p>
+            )}
           </div>
 
-          <div className="bg-[var(--bg-2)] border border-[var(--border)] rounded-xl p-6 sm:p-8 mb-8">
-            <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
-               <div>
-                 <div className="text-[10px] font-mono font-bold text-[var(--accent)] tracking-widest uppercase mb-2">[{result.payer}]</div>
-                 <div className="flex items-center gap-3">
-                   <h3 className="font-display text-3xl font-bold text-[var(--fg)] tracking-tight leading-none m-0">{result.drug_name}</h3>
-                   <span className="font-mono text-xs text-[var(--muted)] uppercase tracking-widest">{result.brand_name}</span>
-                   <HcpcsPill code={result.hcpcs_code} />
-                 </div>
-               </div>
-               <CoverageBadge status={result.coverage_status} />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-[var(--border)] border border-[var(--border)] rounded overflow-hidden mb-8">
-              <div className="bg-[var(--bg)] p-5">
-                <span className="font-mono text-[10px] tracking-widest text-[var(--muted)] block uppercase mb-1">PA_REQUIRED</span>
-                <span className={`font-mono text-xs font-bold tracking-widest uppercase ${result.pa_required ? 'text-rose-400' : 'text-[var(--fg)]'}`}>{result.pa_required ? 'TRUE' : 'FALSE'}</span>
-              </div>
-              <div className="bg-[var(--bg)] p-5">
-                <span className="font-mono text-[10px] tracking-widest text-[var(--muted)] block uppercase mb-1">STEP_THERAPY</span>
-                <span className={`font-mono text-xs font-bold tracking-widest uppercase ${result.step_therapy_required ? 'text-rose-400' : 'text-[var(--fg)]'}`}>{result.step_therapy_required ? 'REQUIRED' : 'NULL'}</span>
-              </div>
-              <div className="bg-[var(--bg)] p-5">
-                <span className="font-mono text-[10px] tracking-widest text-[var(--muted)] block uppercase mb-1">START_DATE</span>
-                <span className="font-mono text-xs font-bold tracking-widest uppercase text-[var(--fg)]">{new Date(result.effective_date).toISOString().split('T')[0]}</span>
-              </div>
-              <div className="bg-[var(--bg)] p-5">
-                <span className="font-mono text-[10px] tracking-widest text-[var(--muted)] block uppercase mb-2">SITE_OF_CARE_MATRIX</span>
-                <div>
-                  {result.site_of_care && result.site_of_care.length > 0 ? (
-                    <SiteOfCareTags sites={result.site_of_care} />
-                  ) : (
-                    <span className="font-mono text-xs font-bold tracking-widest uppercase text-[var(--muted)]">NULL</span>
-                  )}
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+            {/* Header */}
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+              <div>
+                <div style={labelStyle}>{result.payer}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                  <h3 style={{ fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: '1.3rem', color: 'var(--fg)', margin: 0 }}>{result.drug_name}</h3>
+                  {result.brand_name && <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'var(--fg-3)' }}>{result.brand_name}</span>}
+                  <HcpcsPill code={result.hcpcs_code} />
                 </div>
               </div>
+              <CoverageBadge status={result.coverage_status} />
             </div>
 
-            <div>
-              <h4 className="font-mono text-[10px] tracking-widest text-[var(--accent)] uppercase mb-3"># PA_CRITERIA</h4>
-              {result.pa_criteria && result.pa_criteria.length > 0 ? (
-                <ul className="space-y-3">
-                  {result.pa_criteria.map((crit, idx) => (
-                    <li key={idx} className="flex items-start gap-3 font-mono text-xs text-[color-mix(in_srgb,var(--fg)_80%,transparent)] leading-relaxed uppercase">
-                      <span className="text-[var(--accent)] font-bold">{'>'}</span>
-                      <span>{crit}</span>
+            {/* Fields grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', borderBottom: '1px solid var(--border)' }}>
+              {[
+                { label: 'PA Required', value: result.pa_required ? 'Yes' : 'No', danger: result.pa_required },
+                { label: 'Step Therapy', value: result.step_therapy_required ? 'Required' : 'No', danger: result.step_therapy_required },
+                { label: 'Effective Date', value: result.effective_date ? new Date(result.effective_date).toISOString().split('T')[0] : '—' },
+                { label: 'Site of Care', custom: <SiteOfCareTags sites={result.site_of_care} /> },
+              ].map(({ label, value, danger, custom }) => (
+                <div key={label} style={{ padding: '1rem 1.25rem', borderRight: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+                  <span style={labelStyle}>{label}</span>
+                  {custom || <span style={{ ...valueStyle, color: danger ? 'var(--danger)' : 'var(--fg)' }}>{value}</span>}
+                </div>
+              ))}
+            </div>
+
+            {/* PA Criteria */}
+            {result.pa_criteria && result.pa_criteria.length > 0 && (
+              <div style={{ padding: '1.25rem 1.5rem' }}>
+                <span style={labelStyle}>PA Criteria</span>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  {result.pa_criteria.map((c, i) => (
+                    <li key={i} style={{ display: 'flex', gap: '0.5rem', fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--fg-2)', lineHeight: 1.5 }}>
+                      <span style={{ color: 'var(--fg-3)', flexShrink: 0 }}>›</span> {c}
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="font-mono text-xs text-[var(--muted)] uppercase">NULL</p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
-          <div className="text-center mt-10">
+          <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
             <button
               onClick={reset}
-              className="text-xs font-mono uppercase tracking-widest text-[var(--muted)] hover:text-[var(--fg)] transition-colors bg-transparent border border-[var(--border)] px-4 py-3 hover:border-[var(--fg)] rounded"
+              style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--fg-3)', background: 'transparent', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-pill)', padding: '0.55rem 1.5rem', cursor: 'pointer' }}
             >
-              [ REMOUNT NEW PAYLOAD ]
+              Upload another
             </button>
           </div>
         </div>

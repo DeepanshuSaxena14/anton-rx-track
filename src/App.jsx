@@ -9,14 +9,12 @@ import Leaderboard from './pages/Leaderboard'
 import Appeal from './pages/Appeal'
 import ProtectedRoute from './components/ProtectedRoute'
 import AuthCallback from './pages/AuthCallback'
-import Particles from './components/Particles'
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Particles />
       <Nav />
-      <main className="min-h-screen pt-14">
+      <main className="min-h-screen">
         <Routes>
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />

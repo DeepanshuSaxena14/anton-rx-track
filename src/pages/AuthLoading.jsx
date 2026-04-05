@@ -1,20 +1,91 @@
-import React from 'react';
-
 export default function AuthLoading() {
   return (
-    <div className="fixed inset-0 bg-[#111214] flex flex-col items-center justify-center z-50 overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-display pointer-events-none mt-4 text-[rgba(168,178,188,0.04)] leading-none text-[clamp(10rem,25vw,30rem)] whitespace-nowrap">
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'var(--bg)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 50,
+        overflow: 'hidden',
+      }}
+    >
+      {/* Ghost text */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          fontFamily: 'var(--font-display)',
+          fontSize: 'clamp(10rem, 25vw, 30rem)',
+          color: 'rgba(33,34,38,0.04)',
+          lineHeight: 1,
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+          fontWeight: 500,
+          userSelect: 'none',
+        }}
+      >
         ACCESS
       </div>
-      <div className="relative z-10 flex flex-col items-center gap-6">
-        <h1 className="font-display italic text-[clamp(2.5rem,6vw,5rem)] text-[#a8b2bc] m-0 leading-none">
+
+      {/* Content */}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '1.25rem',
+        }}
+      >
+        <h1
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontWeight: 400,
+            fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
+            color: 'var(--fg)',
+            margin: 0,
+            letterSpacing: '-0.02em',
+          }}
+        >
           CoverageIQ
         </h1>
-        <div className="w-[80px] h-px bg-[#a8b2bc] animate-pulse-line"></div>
-        <div className="font-mono text-[0.5rem] tracking-[0.3em] uppercase text-[#7a8290]">
-          AUTHENTICATING
+
+        {/* Pulsing line */}
+        <div
+          style={{
+            width: '60px',
+            height: '1px',
+            background: 'var(--fg-3)',
+            animation: 'pulse 1.5s ease-in-out infinite',
+          }}
+        />
+
+        <div
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.6rem',
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: 'var(--fg-3)',
+          }}
+        >
+          Authenticating
         </div>
       </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+      `}</style>
     </div>
   );
 }
