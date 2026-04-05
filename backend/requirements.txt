@@ -1,0 +1,7 @@
+# Unpinned versions so pip can fetch Python 3.13 compatible pre-built wheels
+fastapi
+uvicorn
+pydantic
+pdfplumber
+python-multipart
+supabase
