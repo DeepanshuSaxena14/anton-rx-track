@@ -4,3 +4,5 @@ uvicorn
 pydantic
 pdfplumber
 python-multipart
+supabase
+sentence-transformers

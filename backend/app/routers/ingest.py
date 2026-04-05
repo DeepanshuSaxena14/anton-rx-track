@@ -58,19 +58,19 @@ async def ingest_pdf(file: UploadFile = File(...)):
         record_ids = p2_store_policies(validated_policies)
         
         # 7. Insert version tracking via P2
-        p2_store_version(record_ids)
+        p2_store_version(record_ids, raw_json_data)
         
         # 8. Generate embeddings via P1 embedder
         embeddings = p1_generate_embeddings(chunks)
         
         # 9. Store embeddings via P2 helper
-        p2_store_embeddings(record_ids, embeddings)
+        p2_store_embeddings(record_ids, chunks, embeddings)
         
         # 10. Compute & 11. store scores contextually
         for i, policy in enumerate(validated_policies):
-            score = p1_compute_score(policy)
+            score_data = p1_compute_score(policy)
             if i < len(record_ids):
-                p2_store_score(record_ids[i], score)
+                p2_store_score(record_ids[i], policy.payer, policy.drug_name, score_data)
                 
         return IngestResponse(
             status="ok",
@@ -80,9 +80,12 @@ async def ingest_pdf(file: UploadFile = File(...)):
         
     except Exception as e:
         # Resilient to partial failures
+        import traceback
+        full_trace = traceback.format_exc()
         errors.append(f"Unexpected error during orchestration: {str(e)}")
+        print(f"PIPELINE EXCEPTION TRACEBACK:\n{full_trace}")
         return IngestResponse(
             status="error",
             message="Ingestion pipeline failed partially or entirely.",
-            errors=errors
+            errors=[str(e), full_trace]
         )

@@ -1,4 +1,5 @@
-from pydantic import BaseModel, ConfigDict, Field
+import json
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Optional, List, Dict, Any
 
 # 12-Field Core Model enforcing exact types
@@ -14,9 +15,19 @@ class PolicyData(BaseModel):
     pa_required: Optional[bool] = None
     pa_criteria: Optional[List[str]] = None
     step_therapy_required: Optional[bool] = None
-    step_therapy_details: Optional[str] = None
+    step_therapy_details: Optional[List[str]] = None
     site_of_care: Optional[List[str]] = None
     effective_date: Optional[str] = Field(None, description="ISO Format Date String")
+
+    @field_validator('covered_indications', 'pa_criteria', 'step_therapy_details', 'site_of_care', mode='before')
+    @classmethod
+    def parse_json_string(cls, v: Any) -> Any:
+        if isinstance(v, str) and (v.strip().startswith('[') or v.strip().startswith('{')):
+            try:
+                return json.loads(v)
+            except (ValueError, TypeError):
+                return v
+        return v
 
 # Ingest Route
 class IngestResponse(BaseModel):

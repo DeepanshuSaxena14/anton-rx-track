@@ -38,14 +38,13 @@ def score_policy(pa_required: bool, step_therapy_required: bool, coverage_status
              score -= 10
              reasons.append("Site of care is restricted (e.g. excluding hospital outpatient).")
 
-    # Floor at 10 (if covered but heavily restricted)
-    if score < 10:
-        score = 10
+    # Normalize to 1-10 scale for DB constraint
+    final_score = max(1, min(10, int(score / 10)))
 
     if score == 100:
         reasons.append("Drug appears covered with no explicit PA or Step Therapy restrictions defined in policy.")
         
     return {
-        "score": score,
+        "score": final_score,
         "base_reason": " ".join(reasons)
     }

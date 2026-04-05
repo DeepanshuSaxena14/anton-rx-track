@@ -20,20 +20,19 @@ def extract_text_and_chunks(pdf_bytes: bytes, chunk_size: int = 1000) -> tuple[s
     if not full_text:
         raise ValueError("PDF text extraction failed. File may be empty or a scanned image without OCR.")
         
-    # Naive chunking by word count or char count. Let's do simple char blocks.
+    # Robust character-based chunking with overlap
+    chunk_size = 2000
+    overlap = 200
     chunks = []
-    # simple chunking logic preserving basic block boundaries if possible
-    blocks = full_text.split('\n\n')
-    current_chunk = ""
-    for block in blocks:
-        if len(current_chunk) + len(block) < chunk_size:
-            current_chunk += block + "\n\n"
-        else:
-            if current_chunk.strip():
-                chunks.append(current_chunk.strip())
-            current_chunk = block + "\n\n"
+    
+    if len(full_text) <= chunk_size:
+        chunks.append(full_text)
+    else:
+        start = 0
+        while start < len(full_text):
+            end = start + chunk_size
+            chunk = full_text[start:end]
+            chunks.append(chunk.strip())
+            start += (chunk_size - overlap)
             
-    if current_chunk.strip():
-        chunks.append(current_chunk.strip())
-        
     return full_text, chunks

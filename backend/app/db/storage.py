@@ -11,7 +11,7 @@ def upload_pdf(file_bytes: bytes, file_name: str, bucket_name: str = "policies")
     response = supabase.storage.from_(bucket_name).upload(
         path=file_name,
         file=file_bytes,
-        file_options={"content-type": "application/pdf"}
+        file_options={"content-type": "application/pdf", "upsert": "true"}
     )
     
     url = get_pdf_url(file_name, bucket_name)

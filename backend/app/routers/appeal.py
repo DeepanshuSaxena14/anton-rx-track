@@ -28,6 +28,7 @@ async def generate_appeal(req: AppealRequest):
         # Call P1
         draft = p1_generate_appeal_letter(
             drug=req.drug, 
+            payer=req.payer,
             denial_reason=req.denial_reason, 
             context=real_chunks
         )
