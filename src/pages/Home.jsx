@@ -1,109 +1,217 @@
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Upload, GitCompare, Clock, Trophy, Radio } from 'lucide-react';
+
+const PANELS = [
+  {
+    id: 'ORIGIN',
+    tag: 'Layer I · Origin · ↓ Scroll to rise',
+    bgText: 'COVERAGE',
+    title: 'STOP READING PDFS.\nSTART MAKING DECISIONS.',
+    body: 'CoverageIQ ingests insurance policy PDFs and instantly answers any question about medical benefit drug coverage across health plans.',
+    cta: '↓ scroll down to ascend',
+    ctaAction: null,
+    align: 'left'
+  },
+  {
+    id: 'SEARCH',
+    tag: 'Layer II · Intelligence',
+    bgText: 'SEARCH',
+    title: 'WHICH PLANS COVER DRUG X?',
+    body: 'Instant cross-payer coverage lookup. PA requirements, step therapy, site of care — all surfaced in seconds.',
+    cta: '→ Open Search',
+    ctaAction: '/search',
+    align: 'right'
+  },
+  {
+    id: 'INGEST',
+    tag: 'Layer III · Extraction',
+    bgText: 'INGEST',
+    title: 'DROP A PDF. GET STRUCTURED DATA.',
+    body: 'AI extracts all 12 fields from any payer policy — drug name, HCPCS code, PA criteria, step therapy, site of care, effective date — in seconds.',
+    cta: '→ Upload Policy',
+    ctaAction: '/upload',
+    align: 'center'
+  },
+  {
+    id: 'COMPARE',
+    tag: 'Layer IV · Normalization',
+    bgText: 'COMPARE',
+    title: 'AETNA VS UHC. SAME DRUG. REAL DIFF.',
+    body: 'Every payer policy normalized to the same 12-field schema. Differing fields highlighted automatically. Apples to apples, finally.',
+    cta: '→ Compare Payers',
+    ctaAction: '/compare',
+    align: 'right'
+  },
+  {
+    id: 'CHANGES',
+    tag: 'Layer V · Intelligence',
+    bgText: 'CHANGES',
+    title: 'WHAT CHANGED THIS QUARTER?',
+    body: 'Color-coded change log across all payers. Coverage added, restrictions tightened, criteria updated — tracked automatically.',
+    cta: '→ View Changes',
+    ctaAction: '/changes',
+    align: 'center'
+  }
+];
 
 export default function Home() {
   const navigate = useNavigate();
+  const trackRef = useRef(null);
+  const [progress, setProgress] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isLight, setIsLight] = useState(false);
 
-  const features = [
-    {
-      name: 'Search',
-      icon: Search,
-      desc: 'Find which plans cover any drug and what PA they require',
-      path: '/search'
-    },
-    {
-      name: 'Upload',
-      icon: Upload,
-      desc: 'Ingest a new payer policy PDF and extract all 12 structured fields',
-      path: '/upload'
-    },
-    {
-      name: 'Compare',
-      icon: GitCompare,
-      desc: 'Side-by-side normalized comparison of two payers for the same drug',
-      path: '/compare'
-    },
-    {
-      name: 'Changes',
-      icon: Clock,
-      desc: 'Color-coded timeline of what changed across policies this quarter',
-      path: '/changes'
-    },
-    {
-      name: 'Leaderboard',
-      icon: Trophy,
-      desc: 'Ranked view of payers by how restrictive their approval process is',
-      path: '/leaderboard'
-    },
-    {
-      name: 'Monitor',
-      icon: Radio,
-      desc: 'Proactive alerts when payer policies are updated',
-      path: '/monitor'
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+      setIsLight(true);
+      document.documentElement.setAttribute('data-theme', 'light');
     }
-  ];
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !isLight;
+    setIsLight(next);
+    if (next) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('theme', 'dark');
+    }
+  };
+
+  useEffect(() => {
+    const isTouch = 'ontouchstart' in window;
+    let targetY = window.scrollY;
+    let currentY = window.scrollY;
+    let rafId;
+
+    const onScroll = () => {
+      targetY = window.scrollY;
+    };
+
+    const tick = () => {
+      const LERP = 0.1;
+
+      if (isTouch) {
+        currentY = targetY;
+      } else {
+        currentY += (targetY - currentY) * LERP;
+      }
+
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      let p = 0;
+      if (maxScroll > 0) {
+        p = Math.max(0, Math.min(1, currentY / maxScroll));
+      }
+
+      setProgress(p);
+      const pIndex = Math.min(PANELS.length - 1, Math.floor(p * PANELS.length + 0.1));
+      setActiveIndex(pIndex);
+
+      document.documentElement.style.setProperty('--scroll-progress', p);
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    rafId = requestAnimationFrame(tick);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
+
+  const scrollToPanel = (idx) => {
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    const target = (maxScroll / (PANELS.length - 1)) * idx;
+    window.scrollTo({ top: target, behavior: 'smooth' });
+  };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12 sm:py-24">
-      {/* Hero Section */}
-      <div className="text-center mb-20 fade-up max-w-[100vw] overflow-hidden px-4">
-        <h1 className="font-sans text-5xl sm:text-7xl md:text-8xl lg:text-[7rem] font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white via-brand-400 to-emerald-400 mb-8 tracking-tight leading-snug pb-4">
-          CoverageIQ
-        </h1>
-        <div className="max-w-4xl mx-auto">
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-8 tracking-tight leading-snug uppercase">
-            <span className="block mb-2">Stop reading PDFs.</span>
-            <span className="block text-brand-400">Start making decisions.</span>
-          </h2>
-          <p className="text-base sm:text-lg md:text-xl text-slate-400 leading-relaxed max-w-3xl mx-auto mb-12">
-            An AI-powered platform that instantly answers any question about medical benefit drug policies across health plans.
-          </p>
+    <div className="-mt-14 relative w-full">
+      <div className="scene" />
+
+      {/* Top Navigation Bar */}
+      <div className="top-nav">
+        <div className="top-nav-left">
+          <button 
+            onClick={() => scrollToPanel(0)} 
+            className="hud-title bg-transparent border-none p-0 cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            CoverageIQ
+          </button>
         </div>
 
-        {/* Stats Row */}
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 fade-up fade-up-delay-1">
-          <div className="bg-surface-1 border border-surface-border rounded-xl px-6 py-4 flex flex-col items-center min-w-[160px]">
-            <span className="text-3xl font-display font-bold text-white mb-1">3</span>
-            <span className="text-sm font-medium text-slate-500 uppercase tracking-widest">Payers tracked</span>
-          </div>
-          <div className="bg-surface-1 border border-surface-border rounded-xl px-6 py-4 flex flex-col items-center min-w-[160px]">
-            <span className="text-3xl font-display font-bold text-white mb-1">2</span>
-            <span className="text-sm font-medium text-slate-500 uppercase tracking-widest">Drugs indexed</span>
-          </div>
-          <div className="bg-surface-1 border border-surface-border rounded-xl px-6 py-4 flex flex-col items-center min-w-[160px]">
-            <span className="text-3xl font-display font-bold text-white mb-1">10</span>
-            <span className="text-sm font-medium text-slate-500 uppercase tracking-widest">Policy changes</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Feature Navigation Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 max-w-5xl mx-auto mb-20">
-        {features.map((f, i) => {
-          const Icon = f.icon;
-          return (
-            <div 
-              key={f.name}
-              onClick={() => navigate(f.path)}
-              className={`bg-surface-1 border border-surface-border rounded-xl p-6 cursor-pointer hover:border-brand-500/50 hover:bg-surface-3 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-500/5 fade-up fade-up-delay-${Math.min((i % 3) + 2, 6)}`}
-            >
-              <div className="h-12 w-12 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mb-5">
-                <Icon className="h-6 w-6 text-brand-400" />
+        <div className="top-nav-right">
+          <div className="flex items-center gap-6">
+            <div className="hidden sm:flex items-center gap-4">
+              <div className="layer-label">{PANELS[activeIndex]?.id}</div>
+              <div className="progress-bar">
+                <div className="progress-fill" style={{ width: `${progress * 100}%` }} />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{f.name}</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                {f.desc}
-              </p>
             </div>
-          );
-        })}
+            <button onClick={toggleTheme} className="theme-toggle">
+              {isLight ? '◑ LIGHT' : '◐ DARK'}
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Bottom Tagline */}
-      <div className="text-center pb-12 fade-up fade-up-delay-4">
-        <p className="text-xs sm:text-sm font-medium text-slate-500 italic">
-          "The middleware between messy insurance paperwork and the people who need answers from it."
-        </p>
+      {/* Side Nav */}
+      <div className="side-nav">
+        {PANELS.map((p, i) => (
+          <button
+            key={p.id}
+            onClick={() => scrollToPanel(i)}
+            className={`dot-btn ${activeIndex === i ? 'active' : ''}`}
+          >
+            <span className="dot-label">{p.id}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Panels Track */}
+      <div className="scroll-track" ref={trackRef}>
+        {PANELS.map((panel, index) => (
+          <section key={panel.id} className="panel">
+            <div className={`panel-inner ${
+              panel.align === 'center' ? 'justify-center text-center' : 
+              panel.align === 'right' ? 'justify-end text-right' : 'justify-start text-left'
+            }`}>
+              <div className="layer-bg" style={{ 
+                left: panel.align === 'right' ? 'auto' : '-0.05em',
+                right: panel.align === 'right' ? '-0.05em' : 'auto'
+              }}>
+                {panel.bgText}
+              </div>
+
+              <div className={`relative z-10 flex flex-col ${
+                panel.align === 'center' ? 'items-center' : 
+                panel.align === 'right' ? 'items-end' : 'items-start'
+              }`}>
+                <span className="layer-tag">{panel.tag}</span>
+                <h2 className="whitespace-pre-line">{panel.title}</h2>
+                <p className="layer-line">{panel.body}</p>
+
+                {panel.ctaAction ? (
+                  <button
+                    onClick={() => navigate(panel.ctaAction)}
+                    className="cta-button"
+                  >
+                    {panel.cta}
+                  </button>
+                ) : (
+                  <div className="font-mono text-[10px] text-[var(--accent)] opacity-60 tracking-[0.2em] animate-pulse uppercase">
+                    {panel.cta}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        ))}
       </div>
     </div>
   );

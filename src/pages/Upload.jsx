@@ -23,7 +23,7 @@ export default function Upload() {
   const handleFile = (selectedFile) => {
     if (!selectedFile) return;
     if (selectedFile.type !== 'application/pdf') {
-      setErrorMsg('Please upload a valid PDF document.');
+      setErrorMsg('SYS_ERR: Invalid payload type. Require application/pdf.');
       setFile(null);
       return;
     }
@@ -69,24 +69,22 @@ export default function Upload() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
-      {/* Page Header */}
-      <div className="text-center mb-8 fade-up">
-        <h1 className="font-display text-3xl sm:text-4xl font-bold text-white mb-3">
-          Upload Policy PDF
+      <div className="text-center mb-12 fade-up">
+        <h1 className="font-display text-4xl sm:text-5xl font-light text-[var(--fg)] mb-4">
+          Data Ingestion
         </h1>
-        <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
-          Upload a payer policy document. Our AI will instantly extract all 12 structured fields including PA criteria, step therapy, and indications.
+        <p className="font-mono text-[var(--accent)] text-sm uppercase tracking-widest max-w-xl mx-auto">
+          AI-driven matrix extraction core
         </p>
       </div>
 
       {status !== 'success' && status !== 'processing' && status !== 'error' && (
         <div className="max-w-xl mx-auto fade-up fade-up-delay-1">
-          {/* Drop Zone */}
           <div
-            className={`relative flex flex-col items-center justify-center p-12 mt-4 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+            className={`relative flex flex-col items-center justify-center p-16 mt-4 border border-dashed rounded-lg cursor-pointer transition-colors ${
               dragging
-                ? 'border-brand-400 bg-brand-500/10'
-                : 'border-surface-4 bg-surface-1 hover:border-brand-500/50 hover:bg-surface-2'
+                ? 'border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]'
+                : 'border-[var(--border)] bg-[var(--bg-2)] hover:border-[var(--accent)]'
             }`}
             onClick={() => fileInputRef.current?.click()}
             onDragOver={onDragOver}
@@ -103,153 +101,144 @@ export default function Upload() {
             
             {file ? (
               <div className="flex flex-col items-center text-center">
-                <FileIcon className="h-10 w-10 text-brand-400 mb-3" />
-                <span className="text-slate-200 font-medium mb-1">{file.name}</span>
-                <span className="text-slate-400 text-sm">{formatSize(file.size)}</span>
+                <FileIcon className="h-10 w-10 text-[var(--accent)] mb-4" />
+                <span className="text-[var(--fg)] font-mono text-sm tracking-wide mb-2 uppercase">{file.name}</span>
+                <span className="font-mono text-xs text-[var(--muted)] tracking-widest">{formatSize(file.size)}</span>
               </div>
             ) : (
               <div className="flex flex-col items-center text-center">
-                <UploadCloud className="h-10 w-10 text-slate-400 mb-3" />
-                <p className="text-slate-200 font-medium mb-1">Drop a policy PDF here</p>
-                <p className="text-slate-400 text-sm">or click to browse</p>
+                <UploadCloud className="h-10 w-10 text-[var(--muted)] mb-4 group-hover:text-[var(--accent)] transition-colors" />
+                <p className="text-[var(--fg)] font-mono text-sm tracking-widest mb-2 uppercase">Mount PDF Payload</p>
+                <p className="font-mono text-xs text-[var(--muted)] tracking-widest uppercase">Click or drop file</p>
               </div>
             )}
           </div>
 
-          {/* Inline Validation Error */}
           {errorMsg && (
-            <div className="flex items-center gap-2 mt-4 text-rose-400 text-sm font-medium p-3 bg-rose-500/10 rounded-lg border border-rose-500/20">
+            <div className="flex items-center gap-3 mt-6 text-rose-400 text-xs font-mono uppercase tracking-widest p-4 bg-[var(--bg-2)] border border-[color-mix(in_srgb,transparent_80%,#f43f5e)] rounded">
               <AlertCircle className="h-4 w-4 shrink-0" />
               {errorMsg}
             </div>
           )}
 
-          {/* Upload Button */}
           {file && !errorMsg && (
-            <div className="mt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="mt-8 animate-in fade-in slide-in-from-bottom-2 duration-300 relative group">
               <button
                 onClick={handleUpload}
-                className="w-full bg-brand-500 hover:bg-brand-600 text-white font-medium py-3.5 px-4 rounded-xl shadow-lg shadow-brand-500/20 transition-all"
+                className="w-full bg-[var(--accent)] hover:bg-[var(--accent-2)] text-[var(--bg)] font-mono text-sm uppercase tracking-widest py-4 px-4 transition-all rounded shadow-md"
               >
-                Extract policy with AI
+                Extract Structured Matrix
               </button>
             </div>
           )}
         </div>
       )}
 
-      {/* Processing State */}
       {status === 'processing' && (
-        <div className="max-w-md mx-auto py-12 flex flex-col items-center fade-up">
-          <Spinner size={40} />
-          <h2 className="text-xl font-bold text-white mt-6 mb-2">Parsing policy with AI…</h2>
-          <p className="text-slate-400 text-sm mb-10 text-center">
-            Extracting all 12 structured fields using Gemini 2.5 Flash
+        <div className="max-w-md mx-auto py-16 flex flex-col items-center fade-up font-mono">
+          <Spinner label="Parsing Payload..." size={40} />
+          <p className="text-[var(--muted)] text-xs mb-12 text-center uppercase tracking-widest mt-8">
+            Routing through Gemini 2.5 Flash
           </p>
 
-          <div className="w-full space-y-3">
-            {['Drug name', 'HCPCS code', 'Coverage status', 'PA criteria', 'Step therapy', 'Site of care'].map((field) => (
-              <div key={field} className="flex items-center justify-between p-4 border border-surface-border rounded-lg shimmer">
-                <span className="text-sm font-medium text-slate-200 relative z-10 drop-shadow-sm">{field}</span>
+          <div className="w-full space-y-4">
+            {['Payer Hash', 'Drug Identity', 'Coverage Vector', 'PA Matrix', 'Step Constraints', 'Care Location'].map((field) => (
+              <div key={field} className="flex items-center justify-between p-4 border border-[var(--border)] bg-[var(--bg-2)] rounded shimmer overflow-hidden relative">
+                <span className="text-[10px] font-mono tracking-widest text-[var(--fg)] uppercase relative z-10">{field}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Error Server State */}
       {status === 'error' && (
-        <div className="max-w-md mx-auto mt-8 bg-rose-500/10 border border-rose-500/20 rounded-xl p-6 text-center fade-up">
-          <div className="mx-auto w-12 h-12 flex items-center justify-center bg-rose-500/20 rounded-full mb-4">
+        <div className="max-w-md mx-auto mt-12 bg-[var(--bg-2)] border border-[color-mix(in_srgb,transparent_80%,#f43f5e)] p-8 text-center fade-up rounded-lg">
+          <div className="mx-auto w-12 h-12 flex items-center justify-center bg-[color-mix(in_srgb,transparent_90%,#f43f5e)] mb-6 rounded-full">
             <XCircle className="h-6 w-6 text-rose-400" />
           </div>
-          <h3 className="text-lg font-bold text-white mb-2">Extraction failed</h3>
-          <p className="text-slate-400 text-sm mb-6">
-            We couldn't extract the data. The PDF may be a flat scanned image or heavily encrypted.
+          <h3 className="text-lg font-mono text-rose-400 uppercase tracking-widest font-bold mb-3">Extraction Aborted</h3>
+          <p className="text-[var(--muted)] text-xs font-mono uppercase tracking-widest leading-relaxed mb-8">
+            Payload unrecognized. Unstructured scan failure parsing PDF blob.
           </p>
           <button
             onClick={reset}
-            className="text-brand-400 font-medium hover:text-brand-300 transition-colors"
+            className="text-rose-400 text-xs font-mono uppercase tracking-widest hover:text-rose-300 transition-colors border-b border-rose-400/50 pb-1"
           >
-            Try another file
+            Remount Payload
           </button>
         </div>
       )}
 
-      {/* Success State */}
       {status === 'success' && result && (
         <div className="max-w-3xl mx-auto fade-up">
-          <div className="flex flex-col items-center justify-center mb-8">
-            <div className="w-12 h-12 flex items-center justify-center bg-emerald-500/20 rounded-full mb-4">
-              <CheckCircle className="h-6 w-6 text-emerald-400" />
+          <div className="flex flex-col items-center justify-center mb-10">
+            <div className="w-12 h-12 flex items-center justify-center bg-[var(--accent)] mb-6 rounded-full text-[var(--bg)] shadow-[0_0_15px_var(--accent)]">
+              <CheckCircle className="h-6 w-6" />
             </div>
-            <h2 className="text-2xl font-bold text-white">Policy extracted successfully</h2>
+            <h2 className="text-xl font-mono text-[var(--accent)] tracking-widest uppercase font-semibold">Matrix Extracted</h2>
           </div>
 
-          <div className="bg-surface-2 border border-surface-border rounded-xl p-5 sm:p-6 mb-6">
-            {/* Success Card Header */}
-            <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+          <div className="bg-[var(--bg-2)] border border-[var(--border)] rounded-xl p-6 sm:p-8 mb-8">
+            <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
                <div>
-                 <div className="text-xs font-medium text-brand-400 mb-1">{result.payer}</div>
-                 <div className="flex items-center gap-2">
-                   <h3 className="font-display text-2xl font-bold text-white">{result.drug_name}</h3>
-                   <span className="text-slate-400 font-medium">{result.brand_name}</span>
+                 <div className="text-[10px] font-mono font-bold text-[var(--accent)] tracking-widest uppercase mb-2">[{result.payer}]</div>
+                 <div className="flex items-center gap-3">
+                   <h3 className="font-display text-3xl font-bold text-[var(--fg)] tracking-tight leading-none m-0">{result.drug_name}</h3>
+                   <span className="font-mono text-xs text-[var(--muted)] uppercase tracking-widest">{result.brand_name}</span>
                    <HcpcsPill code={result.hcpcs_code} />
                  </div>
                </div>
                <CoverageBadge status={result.coverage_status} />
             </div>
 
-            {/* 2-Column Details Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 p-4 bg-surface-1 rounded-lg border border-surface-border">
-              <div>
-                <span className="text-slate-400 block text-xs mb-1">PA Required</span>
-                <span className="font-medium text-slate-200 text-sm">{result.pa_required ? 'Yes' : 'No'}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-[var(--border)] border border-[var(--border)] rounded overflow-hidden mb-8">
+              <div className="bg-[var(--bg)] p-5">
+                <span className="font-mono text-[10px] tracking-widest text-[var(--muted)] block uppercase mb-1">PA_REQUIRED</span>
+                <span className={`font-mono text-xs font-bold tracking-widest uppercase ${result.pa_required ? 'text-rose-400' : 'text-[var(--fg)]'}`}>{result.pa_required ? 'TRUE' : 'FALSE'}</span>
               </div>
-              <div>
-                <span className="text-slate-400 block text-xs mb-1">Step Therapy</span>
-                <span className="font-medium text-slate-200 text-sm">{result.step_therapy_required ? 'Required' : 'Not Required'}</span>
+              <div className="bg-[var(--bg)] p-5">
+                <span className="font-mono text-[10px] tracking-widest text-[var(--muted)] block uppercase mb-1">STEP_THERAPY</span>
+                <span className={`font-mono text-xs font-bold tracking-widest uppercase ${result.step_therapy_required ? 'text-rose-400' : 'text-[var(--fg)]'}`}>{result.step_therapy_required ? 'REQUIRED' : 'NULL'}</span>
               </div>
-              <div>
-                <span className="text-slate-400 block text-xs mb-1">Effective Date</span>
-                <span className="font-medium text-slate-200 text-sm">{new Date(result.effective_date).toLocaleDateString()}</span>
+              <div className="bg-[var(--bg)] p-5">
+                <span className="font-mono text-[10px] tracking-widest text-[var(--muted)] block uppercase mb-1">START_DATE</span>
+                <span className="font-mono text-xs font-bold tracking-widest uppercase text-[var(--fg)]">{new Date(result.effective_date).toISOString().split('T')[0]}</span>
               </div>
-              <div>
-                <span className="text-slate-400 block text-xs mb-1">Site of Care</span>
-                <div className="mt-1">
+              <div className="bg-[var(--bg)] p-5">
+                <span className="font-mono text-[10px] tracking-widest text-[var(--muted)] block uppercase mb-2">SITE_OF_CARE_MATRIX</span>
+                <div>
                   {result.site_of_care && result.site_of_care.length > 0 ? (
                     <SiteOfCareTags sites={result.site_of_care} />
                   ) : (
-                    <span className="font-medium text-slate-200 text-sm">Not specified</span>
+                    <span className="font-mono text-xs font-bold tracking-widest uppercase text-[var(--muted)]">NULL</span>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* PA Criteria */}
             <div>
-              <h4 className="text-sm font-semibold text-slate-200 mb-3">PA Criteria</h4>
+              <h4 className="font-mono text-[10px] tracking-widest text-[var(--accent)] uppercase mb-3"># PA_CRITERIA</h4>
               {result.pa_criteria && result.pa_criteria.length > 0 ? (
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                   {result.pa_criteria.map((crit, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
-                      <span className="text-brand-500 font-bold mt-[-2px]">&rarr;</span>
-                      <span className="leading-tight">{crit}</span>
+                    <li key={idx} className="flex items-start gap-3 font-mono text-xs text-[color-mix(in_srgb,var(--fg)_80%,transparent)] leading-relaxed uppercase">
+                      <span className="text-[var(--accent)] font-bold">{'>'}</span>
+                      <span>{crit}</span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500">None specified.</p>
+                <p className="font-mono text-xs text-[var(--muted)] uppercase">NULL</p>
               )}
             </div>
           </div>
 
-          <div className="text-center mt-8">
+          <div className="text-center mt-10">
             <button
               onClick={reset}
-              className="text-sm text-brand-400 hover:text-brand-300 font-medium inline-flex items-center gap-1.5 transition-colors"
+              className="text-xs font-mono uppercase tracking-widest text-[var(--muted)] hover:text-[var(--fg)] transition-colors bg-transparent border border-[var(--border)] px-4 py-3 hover:border-[var(--fg)] rounded"
             >
-              <span>&larr;</span> Upload another policy
+              [ REMOUNT NEW PAYLOAD ]
             </button>
           </div>
         </div>

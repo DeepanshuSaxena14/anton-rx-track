@@ -2,6 +2,7 @@ import axios from 'axios';
 import { mockPolicies, mockChanges } from '../mocks/mockData';
 
 const MOCK_MODE = true;
+// TODO Phase 2: add getAccessTokenSilently() to axios interceptor.
 
 export async function searchPolicies(drugName) {
   if (MOCK_MODE) {
@@ -113,23 +114,4 @@ export async function getChanges(filters) {
   return response.data;
 }
 
-export async function getScores() {
-  if (MOCK_MODE) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const scores = mockPolicies.map(p => ({
-          id: p.id,
-          payer: p.payer,
-          drug: p.brand_name,
-          score: p.score,
-          pa_required: p.pa_required,
-          step_therapy_required: p.step_therapy_required
-        }));
-        resolve(scores);
-      }, 600);
-    });
-  }
-  
-  const response = await axios.get('/scores');
-  return response.data;
-}
+
