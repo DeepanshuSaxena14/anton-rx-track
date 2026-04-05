@@ -80,9 +80,12 @@ async def ingest_pdf(file: UploadFile = File(...)):
         
     except Exception as e:
         # Resilient to partial failures
+        import traceback
+        full_trace = traceback.format_exc()
         errors.append(f"Unexpected error during orchestration: {str(e)}")
+        print(f"PIPELINE EXCEPTION TRACEBACK:\n{full_trace}")
         return IngestResponse(
             status="error",
             message="Ingestion pipeline failed partially or entirely.",
-            errors=errors
+            errors=[str(e), full_trace]
         )

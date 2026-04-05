@@ -66,4 +66,5 @@ def rag_query(question: str, chunks: List[Dict[str, Any]]) -> Dict[str, Any]:
         }
     except Exception as e:
         logger.error(f"RAG query generation failed: {str(e)}")
-        raise RuntimeError("RAG query failed.") from e
+        # Bubble up the real message for easier debugging in the UI
+        raise RuntimeError(f"RAG query failed: {str(e)}") from e

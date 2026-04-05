@@ -37,19 +37,19 @@ def p1_compute_score(policy: PolicyData) -> Dict[str, Any]:
         site_of_care=policy.site_of_care
     )
 
-def p1_rag_query(question: str, context_chunks: List[str]) -> str:
-    # Safely convert chunks context to strings if they come back as dicts
-    context_str = "\n\n".join(context_chunks)
-    return ai_rag_query(question, context_str)
+def p1_rag_query(question: str, context_chunks: List[Dict[str, Any]]) -> Dict[str, Any]:
+    # Pass the rich list of chunks (text + citations) directly to the AI layer
+    return ai_rag_query(question, context_chunks)
 
 def p1_diff_summary(old_text: str, new_text: str) -> str:
     return ai_diff_summary(old_text, new_text)
 
-def p1_generate_appeal_letter(drug: str, denial_reason: str, context: str) -> str:
-    return ai_generate_appeal_letter(drug, denial_reason, context)
+def p1_generate_appeal_letter(drug: str, payer: str, denial_reason: str, context: str) -> str:
+    return ai_generate_appeal_letter(drug, payer, denial_reason, context)
 
 def p2_store_original_pdf(filename: str, pdf_bytes: bytes) -> str:
-    return upload_pdf(filename, pdf_bytes)
+    res = upload_pdf(pdf_bytes, filename)
+    return res.get("url")
 
 def p2_store_policies(policies: List[PolicyData]) -> List[str]:
     record_ids = []
@@ -106,14 +106,45 @@ def p2_search_embeddings(query: str, top_k: int = 5) -> List[Dict]:
             })
     return mapped
 
-def p2_normalize_policies(policies: List[PolicyData]) -> List[PolicyData]:
+def p2_normalize_policies(policies: List[Dict[str, Any]]) -> List[PolicyData]:
+    """
+    Safely converts raw data into strict PolicyData objects, ignoring internal DB fields.
+    """
+    valid_keys = PolicyData.model_fields.keys()
     out = []
     for p in policies:
         try:
-            n = normalize_policy_payload(p.model_dump(mode="json"))
+            # If it's already a model, dump it; if it's a dict, filter it
+            data = p.model_dump() if hasattr(p, "model_dump") else p
+            clean_p = {k: v for k, v in data.items() if k in valid_keys}
+            
+            # Type Safeguard: Database column is 'text', so it might return stringified JSON
+            st_details = clean_r = clean_p.get("step_therapy_details")
+            if isinstance(st_details, str) and st_details.startswith("["):
+                try:
+                    clean_p["step_therapy_details"] = json.loads(st_details)
+                except Exception:
+                    pass
+
+            n = normalize_policy_payload(clean_p)
             out.append(PolicyData(**n))
-        except:
-             out.append(p)
+        except Exception:
+            # Fallback to a filtered version if normalization or full validation fails
+            try:
+                data = p.model_dump() if hasattr(p, "model_dump") else p
+                clean_p = {k: v for k, v in data.items() if k in valid_keys}
+                
+                # Apply same safeguard to fallback path
+                st_details = clean_p.get("step_therapy_details")
+                if isinstance(st_details, str) and st_details.startswith("["):
+                    try:
+                        clean_p["step_therapy_details"] = json.loads(st_details)
+                    except Exception:
+                        pass
+                        
+                out.append(PolicyData(**clean_p))
+            except Exception:
+                continue
     return out
 
 def p2_store_score(record_id: str, payer: str, drug_name: str, score_data: Dict[str, Any]):
@@ -131,8 +162,11 @@ def p2_fetch_policies_by_drug(drug_name: str = None, brand_name: str = None, hcp
     records = get_policies_by_drug(query)
     
     mapped = []
+    valid_keys = PolicyData.model_fields.keys()
     for r in records:
-        mapped.append(PolicyData(**r))
+        # Filter out DB-only fields like 'id', 'policy_hash', etc.
+        clean_r = {k: v for k, v in r.items() if k in valid_keys}
+        mapped.append(PolicyData(**clean_r))
     return mapped
 
 def p2_fetch_versions(drug: str, payer: str) -> List[Any]:

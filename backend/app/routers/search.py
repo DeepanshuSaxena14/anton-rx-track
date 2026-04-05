@@ -69,15 +69,18 @@ async def query_policies(req: QueryRequest):
         
     try:
         # Retrieve REAL chunks using P2 embeddings interface
-        retrieved_items = p2_search_embeddings(req.question, top_k=5)
+        retrieved_items = p2_search_embeddings(req.question, top_k=10)
         
-        context_chunks = [item["chunk"] for item in retrieved_items]
-        # Dynamically set real citations based on the payload rather than hardcoding
-        citations = [item["citation"] for item in retrieved_items if "citation" in item]
+        # Convert 'chunk' to 'text' to match the schema expected by ai/rag.py
+        context_chunks = [{"text": item["chunk"], "citation": item["citation"]} for item in retrieved_items]
         
-        answer = p1_rag_query(req.question, context_chunks)
+        # p1_rag_query now returns a rich Dict {answer: str, citations: List[str], ...}
+        rag_res = p1_rag_query(req.question, context_chunks)
         
-        return QueryResponse(answer=answer, citations=citations)
+        return QueryResponse(
+            answer=rag_res.get("answer", ""), 
+            citations=rag_res.get("citations", [])
+        )
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")

@@ -10,12 +10,12 @@ class PolicyInsert(BaseModel):
     hcpcs_code: str | None = None
     payer: str | None = None
     coverage_status: Literal["covered", "not_covered", "conditional"] | None = None
-    covered_indications: list[str] = Field(default_factory=list)
+    covered_indications: list[str] | None = Field(default_factory=list)
     pa_required: bool | None = None
-    pa_criteria: list[str] = Field(default_factory=list)
+    pa_criteria: list[str] | None = Field(default_factory=list)
     step_therapy_required: bool | None = None
-    step_therapy_details: str | None = None
-    site_of_care: list[str] = Field(default_factory=list)
+    step_therapy_details: list[str] | None = Field(default_factory=list)
+    site_of_care: list[str] | None = Field(default_factory=list)
     effective_date: date | None = None
 
     source_file_name: str | None = None
