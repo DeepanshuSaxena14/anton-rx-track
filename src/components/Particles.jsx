@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const COLORS = ['#39FF14', '#a8ff78', '#00D4FF', '#FFE600', '#9B5DE5'];
+const COLORS = ['#c4a8d4', '#8b6fa8', '#9d8fa8', '#f5f0eb', '#7b5fa8'];
 const CHARS = ['§', '✦'];
 
 export default function Particles() {
