@@ -79,3 +79,17 @@ export async function generateAppeal(drug, payer, denialReason, extraContext = '
   });
   return response.data;
 }
+export async function getPayers() {
+  const response = await axios.get('/search/payers');
+  return response.data;
+}
+
+export async function getDrugs() {
+  const response = await axios.get('/search/drugs');
+  return response.data;
+}
+
+export async function getScoredDrugs() {
+  const response = await axios.get('/scores/drugs');
+  return response.data;
+}

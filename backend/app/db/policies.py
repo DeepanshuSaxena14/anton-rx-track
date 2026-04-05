@@ -110,3 +110,33 @@ def get_policy_by_payer_and_drug(payer: str, drug_query: str):
         .execute()
     )
     return response.data[0] if response.data else None
+
+
+def get_unique_payers():
+    """
+    Returns a unique list of all payers currently stored in the policies records logic.
+    """
+    supabase = get_supabase()
+    response = supabase.table("policies").select("payer").execute()
+    # Unique set of payers
+    payers = sorted(list(set(r["payer"] for r in response.data if r.get("payer"))))
+    return payers
+
+
+def get_unique_drugs():
+    """
+    Returns a unique list of all drugs (brand_name) currently stored in the policies records natively.
+    """
+    supabase = get_supabase()
+    response = supabase.table("policies").select("brand_name", "drug_name").execute()
+    
+    # We'll use brand_name as the primary label for the UI, fallback to drug_name
+    drugs = []
+    seen = set()
+    for r in response.data:
+        label = r.get("brand_name") or r.get("drug_name")
+        if label and label not in seen:
+            drugs.append(label)
+            seen.add(label)
+            
+    return sorted(drugs)

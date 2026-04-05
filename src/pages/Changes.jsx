@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, RefreshCw, X } from 'lucide-react';
-import { getChanges } from '../api/client';
-import { PAYERS, DRUGS } from '../mocks/mockData';
+import { getChanges, getPayers, getDrugs } from '../api/client';
 import { Spinner, EmptyState } from '../components/ui';
 
 const TYPE_CONFIG = {
@@ -57,10 +56,29 @@ const selectStyle = {
 };
 
 export default function Changes() {
+  const [availablePayers, setAvailablePayers] = useState([]);
+  const [availableDrugs, setAvailableDrugs] = useState([]);
+  const [resourcesLoading, setResourcesLoading] = useState(true);
+
   const [changes, setChanges] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({ payer: '', drug: '', type: '' });
   const [expanded, setExpanded] = useState(null);
+
+  useEffect(() => {
+    async function loadResources() {
+      try {
+        const [payers, drugs] = await Promise.all([getPayers(), getDrugs()]);
+        setAvailablePayers(payers);
+        setAvailableDrugs(drugs);
+      } catch (err) {
+        console.error('Core: Resource discovery failed:', err);
+      } finally {
+        setResourcesLoading(false);
+      }
+    }
+    loadResources();
+  }, []);
 
   useEffect(() => {
     const fetchChanges = async () => {
@@ -79,8 +97,10 @@ export default function Changes() {
         setLoading(false);
       }
     };
-    fetchChanges();
-  }, [filters]);
+    if (!resourcesLoading) {
+      fetchChanges();
+    }
+  }, [filters, resourcesLoading]);
 
   const hasActiveFilters = filters.payer || filters.drug || filters.type;
   const clearFilters = () => setFilters({ payer: '', drug: '', type: '' });
@@ -90,6 +110,14 @@ export default function Changes() {
     { value: 'restriction', text: 'Restriction Added' },
     { value: 'criteria_changed', text: 'Criteria Changed' },
   ];
+
+  if (resourcesLoading) {
+    return (
+      <div style={{ padding: '10rem 0', display: 'flex', justifyContent: 'center' }}>
+        <Spinner label="Initializing audit history..." />
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '5rem 1.5rem 3rem' }}>
@@ -106,8 +134,8 @@ export default function Changes() {
       {/* Filters */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.6rem', marginBottom: '2.5rem' }}>
         {[
-          { key: 'payer', label: 'All payers', options: PAYERS },
-          { key: 'drug', label: 'All drugs', options: DRUGS },
+          { key: 'payer', label: 'All payers', options: availablePayers },
+          { key: 'drug', label: 'All drugs', options: availableDrugs },
           { key: 'type', label: 'All types', options: TYPES, isObj: true },
         ].map(({ key, label, options, isObj }) => (
           <select

@@ -1,11 +1,25 @@
 from fastapi import APIRouter, Query, HTTPException
-from typing import Optional
+from typing import Optional, List
 import uuid
 
 from app.schemas import SearchResponse, PolicyResult, QueryRequest, QueryResponse
-from app.services import p2_fetch_policies_by_drug, p1_rag_query, p2_search_embeddings
+from app.services import (
+    p2_fetch_policies_by_drug, 
+    p1_rag_query, 
+    p2_search_embeddings, 
+    p2_fetch_unique_payers, 
+    p2_fetch_unique_drugs
+)
 
 router = APIRouter(tags=["search"])
+
+@router.get("/search/payers", response_model=List[str])
+async def get_payers():
+    return p2_fetch_unique_payers()
+
+@router.get("/search/drugs", response_model=List[str])
+async def get_drugs():
+    return p2_fetch_unique_drugs()
 
 # Simple stub alias resolver for the demo
 ALIAS_MAP = {

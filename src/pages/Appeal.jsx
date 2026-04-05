@@ -47,7 +47,7 @@ export default function Appeal() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
-      <div className="text-center mb-12 fade-up">
+      <div className="text-center mt-12 mb-12 fade-up">
         <h1 className="font-display text-4xl sm:text-5xl font-light text-[var(--fg)] mb-4">
           Appeal Terminal
         </h1>
@@ -124,28 +124,28 @@ export default function Appeal() {
             </div>
           ) : result?.appeal_draft ? (
             <div className="h-full flex flex-col border border-[var(--accent)] bg-[var(--bg-2)] rounded overflow-hidden animate-in fade-in zoom-in duration-300">
-               <div className="flex items-center justify-between p-4 bg-[var(--bg)] border-b border-[var(--border)]">
-                 <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-[var(--accent)]" />
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--fg)]">REBUTTAL_DRAFT.txt</span>
-                 </div>
-                 <button onClick={handleDownload} className="text-[var(--accent)] hover:text-[var(--accent-2)] transition-colors">
-                    <Download className="h-4 w-4" />
-                 </button>
-               </div>
-               <div className="flex-1 p-6 font-mono text-[13px] text-[var(--fg)] leading-relaxed overflow-y-auto max-h-[500px] whitespace-pre-wrap select-text selection:bg-[var(--accent)] selection:text-[var(--bg)]">
-                 {result.appeal_draft}
-               </div>
-               {result.citations && result.citations.length > 0 && (
-                 <div className="p-4 bg-[var(--bg)] border-t border-[var(--border)]">
-                   <span className="text-[9px] font-mono text-[var(--muted)] uppercase tracking-widest block mb-2 border-b border-[var(--border)] pb-1">CITATIONS_RESOLVED</span>
-                   <div className="flex flex-wrap gap-2">
-                     {result.citations.map((c, i) => (
-                       <span key={i} className="text-[9px] font-mono bg-[var(--bg-2)] border border-[var(--border)] px-2 py-0.5 text-[var(--accent)] uppercase">{c}</span>
-                     ))}
-                   </div>
-                 </div>
-               )}
+              <div className="flex items-center justify-between p-4 bg-[var(--bg)] border-b border-[var(--border)]">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-[var(--accent)]" />
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--fg)]">REBUTTAL_DRAFT.txt</span>
+                </div>
+                <button onClick={handleDownload} className="text-[var(--accent)] hover:text-[var(--accent-2)] transition-colors">
+                  <Download className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex-1 p-6 font-mono text-[13px] text-[var(--fg)] leading-relaxed overflow-y-auto max-h-[500px] whitespace-pre-wrap select-text selection:bg-[var(--accent)] selection:text-[var(--bg)]">
+                {result.appeal_draft}
+              </div>
+              {result.citations && result.citations.length > 0 && (
+                <div className="p-4 bg-[var(--bg)] border-t border-[var(--border)]">
+                  <span className="text-[9px] font-mono text-[var(--muted)] uppercase tracking-widest block mb-2 border-b border-[var(--border)] pb-1">CITATIONS_RESOLVED</span>
+                  <div className="flex flex-wrap gap-2">
+                    {result.citations.map((c, i) => (
+                      <span key={i} className="text-[9px] font-mono bg-[var(--bg-2)] border border-[var(--border)] px-2 py-0.5 text-[var(--accent)] uppercase">{c}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : result?.error ? (
             <div className="h-full border border-rose-500/20 bg-[var(--bg-2)] rounded flex flex-col items-center justify-center p-12 text-center animate-in fade-in">
