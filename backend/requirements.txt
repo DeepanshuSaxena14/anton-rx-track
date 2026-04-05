@@ -5,3 +5,4 @@ pydantic
 pdfplumber
 python-multipart
 supabase
+python-dotenv
