@@ -31,20 +31,20 @@ export default function Compare() {
   }, [drug, payerA, payerB]);
 
   const fields = [
-    { key: 'coverage_status', label: 'Coverage Status' },
-    { key: 'hcpcs_code', label: 'HCPCS Code' },
-    { key: 'pa_required', label: 'PA Required' },
-    { key: 'pa_criteria', label: 'PA Criteria' },
-    { key: 'step_therapy_required', label: 'Step Therapy Required' },
-    { key: 'step_therapy_details', label: 'Step Therapy Details' },
-    { key: 'site_of_care', label: 'Site of Care' },
-    { key: 'effective_date', label: 'Effective Date' },
-    { key: 'score', label: 'Restrictiveness Score' }
+    { key: 'coverage_status', label: 'COVERAGE_STATUS' },
+    { key: 'hcpcs_code', label: 'HCPCS_CODE' },
+    { key: 'pa_required', label: 'PA_REQUIRED' },
+    { key: 'pa_criteria', label: 'PA_CRITERIA' },
+    { key: 'step_therapy_required', label: 'STEP_THERAPY_REQ' },
+    { key: 'step_therapy_details', label: 'STEP_THERAPY_MATRIX' },
+    { key: 'site_of_care', label: 'SITE_OF_CARE' },
+    { key: 'effective_date', label: 'START_DATE' },
+    { key: 'score', label: 'RESTRICTION_SCORE' }
   ];
 
   const renderValue = (key, value) => {
     if (value === null || value === undefined || value === '') {
-      return <span className="italic text-slate-500 text-sm">Not specified</span>;
+      return <span className="font-mono text-xs text-[var(--muted)] opacity-50">NULL</span>;
     }
     
     if (key === 'coverage_status') return <CoverageBadge status={value} />;
@@ -54,32 +54,31 @@ export default function Compare() {
     
     if (key === 'pa_required' || key === 'step_therapy_required') {
       return (
-        <div className="flex items-center gap-2 text-sm text-slate-300">
-          {value ? <AlertTriangle className="h-4 w-4 text-amber-500" /> : <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-          <span className="font-medium">{value ? 'Yes' : 'No'}</span>
-        </div>
+        <span className={`font-mono text-xs uppercase tracking-wider ${value ? 'text-rose-400 font-bold' : 'text-[var(--fg)]'}`}>
+          {value ? 'TRUE' : 'FALSE'}
+        </span>
       );
     }
     
     if (key === 'effective_date') {
-      return <span className="text-sm font-medium text-slate-200">{new Date(value).toLocaleDateString()}</span>;
+      return <span className="font-mono text-xs uppercase tracking-wider text-[var(--fg)]">{new Date(value).toISOString().split('T')[0]}</span>;
     }
     
     if (Array.isArray(value)) {
-      if (value.length === 0) return <span className="text-sm text-slate-500 italic">None specified.</span>;
+      if (value.length === 0) return <span className="font-mono text-xs text-[var(--muted)] opacity-50">NULL_ARRAY</span>;
       return (
-        <ul className="space-y-1.5">
+        <ul className="space-y-2">
           {value.map((item, idx) => (
-            <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
-               <span className="text-brand-500 font-bold mt-[-2px]">&rarr;</span>
-               <span className="leading-snug">{item}</span>
+            <li key={idx} className="flex items-start gap-2 text-xs font-mono text-[var(--fg)] opacity-80 leading-relaxed uppercase">
+               <span className="text-[var(--accent)]">{'>'}</span>
+               <span>{item}</span>
             </li>
           ))}
         </ul>
       );
     }
     
-    return <span className="text-sm text-slate-300 bg-surface-3 p-2 rounded border border-surface-border block">{String(value)}</span>;
+    return <span className="font-mono text-xs text-[var(--fg)] bg-[var(--bg)] p-2 rounded border border-[var(--border)] block uppercase">{String(value)}</span>;
   };
 
   let diffCount = 0;
@@ -91,127 +90,118 @@ export default function Compare() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
-      {/* Header */}
-      <div className="text-center mb-10 fade-up">
-        <h1 className="font-display text-3xl sm:text-4xl font-bold text-white mb-3">
-          Payer Comparison
+      <div className="text-center mb-12 fade-up">
+        <h1 className="font-display text-4xl sm:text-5xl font-light text-[var(--fg)] tracking-tight mb-4">
+          Diff Engine
         </h1>
-        <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
-          Side-by-side view of two payers for the same drug — all fields normalized.
+        <p className="font-mono text-[var(--accent)] text-sm uppercase tracking-widest max-w-2xl mx-auto">
+          Matrix divergence scan
         </p>
       </div>
 
-      {/* Normalization Banner */}
-      <div className="max-w-4xl mx-auto flex items-start gap-3 p-4 mb-10 bg-brand-500/10 border border-brand-500/20 rounded-xl text-brand-200 text-sm fade-up fade-up-delay-1">
-        <Info className="h-5 w-5 shrink-0 text-brand-400" />
-        <p className="leading-relaxed">
-          <strong className="font-semibold text-brand-100">Normalized schema</strong> — UHC's Clinical Policy Bulletin and Cigna's Drug and Biologic Coverage Policy are mapped to the same 12-field standard structure, enabling true apples-to-apples comparison.
+      <div className="max-w-4xl mx-auto flex items-start gap-3 p-4 mb-10 bg-[var(--bg-2)] border border-[var(--accent)] rounded fade-up fade-up-delay-1 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-1.5 bg-[var(--accent)] text-[var(--bg)] font-mono text-[10px] uppercase font-bold">INFO</div>
+        <Info className="h-5 w-5 shrink-0 text-[var(--accent)] mt-1" />
+        <p className="leading-relaxed font-mono text-xs text-[var(--fg)] uppercase pr-8 tracking-wide">
+          <strong className="text-[var(--accent)] font-bold">[ NORMALIZED SCHEMA ]:</strong> Internal structures mapped to 12-field standard matrix enabling raw cross-dimensional diff sequence.
         </p>
       </div>
 
-      {/* Controls */}
-      <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 fade-up fade-up-delay-2 p-4 bg-surface-1 border border-surface-border rounded-xl">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Drug</label>
+      <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 fade-up fade-up-delay-2 p-6 bg-[var(--bg-2)] border border-[var(--border)] rounded shadow-sm">
+        <div className="flex flex-col gap-2">
+          <label className="font-mono text-[10px] tracking-widest text-[var(--muted)] uppercase"># SELECT_DRUG</label>
           <select 
-            className="bg-surface-2 border border-surface-border text-slate-200 rounded-lg py-2.5 px-3 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 appearance-none cursor-pointer"
+            className="bg-[var(--bg)] border border-[var(--border)] text-[var(--fg)] rounded py-2 px-3 font-mono text-sm focus:outline-none focus:border-[var(--accent)] transition-colors cursor-pointer"
             value={drug}
             onChange={(e) => setDrug(e.target.value)}
           >
-            {DRUGS.map((d) => <option key={d} value={d}>{d}</option>)}
+            {DRUGS.map((d) => <option key={d} value={d} className="bg-[var(--bg-2)]">{d}</option>)}
           </select>
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Payer A</label>
+        <div className="flex flex-col gap-2">
+          <label className="font-mono text-[10px] tracking-widest text-[var(--muted)] uppercase"># TARGET_A</label>
           <select 
-            className="bg-surface-2 border border-surface-border text-slate-200 rounded-lg py-2.5 px-3 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 appearance-none cursor-pointer"
+            className="bg-[var(--bg)] border border-[var(--border)] text-[var(--fg)] rounded py-2 px-3 font-mono text-sm focus:outline-none focus:border-[var(--accent)] transition-colors cursor-pointer"
             value={payerA}
             onChange={(e) => setPayerA(e.target.value)}
           >
-            {PAYERS.map((p) => <option key={p} value={p}>{p}</option>)}
+            {PAYERS.map((p) => <option key={p} value={p} className="bg-[var(--bg-2)]">{p}</option>)}
           </select>
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Payer B</label>
+        <div className="flex flex-col gap-2">
+          <label className="font-mono text-[10px] tracking-widest text-[var(--muted)] uppercase"># TARGET_B</label>
           <select 
-            className="bg-surface-2 border border-surface-border text-slate-200 rounded-lg py-2.5 px-3 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 appearance-none cursor-pointer"
+            className="bg-[var(--bg)] border border-[var(--border)] text-[var(--fg)] rounded py-2 px-3 font-mono text-sm focus:outline-none focus:border-[var(--accent)] transition-colors cursor-pointer"
             value={payerB}
             onChange={(e) => setPayerB(e.target.value)}
           >
-            {PAYERS.map((p) => <option key={p} value={p}>{p}</option>)}
+            {PAYERS.map((p) => <option key={p} value={p} className="bg-[var(--bg-2)]">{p}</option>)}
           </select>
         </div>
       </div>
 
-      {/* Main Content Area */}
       {loading ? (
         <div className="py-24 fade-up">
-          <Spinner label="Comparing normalized policies..." size={40} />
+          <Spinner label="EXECUTING DIFF SCAN..." />
         </div>
       ) : data && (!data.policyA || !data.policyB) ? (
         <div className="max-w-xl mx-auto py-12 fade-up">
           <EmptyState 
-            icon={AlertCircle} 
-            title="Data Missing" 
-            subtitle="One or both payers do not have data for the selected drug in the system. Select different payers or a different drug to compare." 
+            title="DATA MISSING" 
+            subtitle="Selected matrix nodes lack corresponding target payload. Modify parameters." 
           />
         </div>
       ) : data && data.policyA && data.policyB ? (
-        <div className="max-w-5xl mx-auto fade-up fade-up-delay-3">
+        <div className="max-w-6xl mx-auto fade-up fade-up-delay-3">
           
           {diffCount > 0 && (
-            <div className="flex items-center justify-center gap-2 mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-200 text-sm font-medium animate-in fade-in slide-in-from-bottom-2">
-              <AlertTriangle className="h-4 w-4" />
-              <span>{diffCount} fields differ between these payers</span>
+            <div className="flex items-center justify-center gap-3 mb-6 p-4 bg-[color-mix(in_srgb,transparent_80%,#facc15)] border border-[color-mix(in_srgb,transparent_50%,#facc15)] text-[#facc15] font-mono text-xs font-bold uppercase tracking-widest animate-in fade-in rounded">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>{diffCount} CONFLICTS DETECTED BETWEEN RECORDS</span>
             </div>
           )}
 
-          <div className="grid grid-cols-[160px_1fr_1fr] gap-px bg-surface-border rounded-xl overflow-hidden border border-surface-border shadow-lg">
-            {/* Header Row */}
-            <div className="bg-surface-1 p-5 border-b border-surface-border"></div>
-            <div className="bg-surface-1 p-5 border-b border-surface-border">
-              <div className="text-xs font-medium text-brand-400 mb-1">{data.policyA.payer}</div>
-              <h3 className="font-display text-xl font-bold text-white mb-2">{data.policyA.drug_name}</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400 font-medium text-sm">{data.policyA.brand_name}</span>
+          <div className="flex flex-col border border-[var(--border)] bg-[var(--bg)] rounded overflow-hidden shadow-sm">
+            <div className="grid grid-cols-[160px_1fr_1fr] md:grid-cols-[200px_1fr_1fr] gap-px bg-[var(--border)] border-b border-[var(--border)]">
+              <div className="bg-[var(--bg-2)] p-5"></div>
+              <div className="bg-[var(--bg-2)] p-6 text-center">
+                <div className="text-[10px] font-mono font-bold tracking-widest text-[var(--accent)] mb-2 uppercase">[{data.policyA.payer}]</div>
+                <h3 className="font-display text-2xl tracking-tight text-[var(--fg)] mb-1 uppercase m-0 leading-none">{data.policyA.drug_name}</h3>
+                <span className="font-mono text-[10px] text-[var(--muted)] uppercase tracking-wider block mt-2">{data.policyA.brand_name}</span>
               </div>
-            </div>
-            <div className="bg-surface-1 p-5 border-b border-surface-border">
-              <div className="text-xs font-medium text-brand-400 mb-1">{data.policyB.payer}</div>
-              <h3 className="font-display text-xl font-bold text-white mb-2">{data.policyB.drug_name}</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400 font-medium text-sm">{data.policyB.brand_name}</span>
+              <div className="bg-[var(--bg-2)] p-6 text-center">
+                <div className="text-[10px] font-mono font-bold tracking-widest text-rose-400 mb-2 uppercase">[{data.policyB.payer}]</div>
+                <h3 className="font-display text-2xl tracking-tight text-[var(--fg)] mb-1 uppercase m-0 leading-none">{data.policyB.drug_name}</h3>
+                <span className="font-mono text-[10px] text-[var(--muted)] uppercase tracking-wider block mt-2">{data.policyB.brand_name}</span>
               </div>
             </div>
             
-            {/* Data Rows */}
-            {fields.map((f) => {
-              const valA = data.policyA[f.key];
-              const valB = data.policyB[f.key];
-              const differ = valuesDiffer(valA, valB);
-              
-              const valBg = differ ? 'bg-amber-500/5' : 'bg-surface-2';
-              const labelBorder = differ ? 'border-l-2 border-l-amber-500/60' : 'border-l-2 border-l-transparent';
-              
-              return (
-                <Fragment key={f.key}>
-                  {/* Label Cell */}
-                  <div className={`p-4 bg-surface-1 font-semibold text-sm text-slate-300 flex items-center ${labelBorder}`}>
-                    <span className={differ ? 'text-amber-200/90' : ''}>{f.label}</span>
+            <div className="flex flex-col gap-px bg-[var(--border)]">
+              {fields.map((f) => {
+                const valA = data.policyA[f.key];
+                const valB = data.policyB[f.key];
+                const differ = valuesDiffer(valA, valB);
+                
+                const valBg = differ ? 'bg-[color-mix(in_srgb,transparent_90%,#facc15)]' : 'bg-[var(--bg)]';
+                const labelBorder = differ ? 'border-l-4 border-l-[#facc15]' : 'border-l-4 border-l-transparent';
+                
+                return (
+                  <div key={f.key} className="grid grid-cols-[160px_1fr_1fr] md:grid-cols-[200px_1fr_1fr] gap-px">
+                    <div className={`p-4 bg-[var(--bg-2)] min-h-[60px] font-mono text-[10px] font-bold tracking-widest text-[var(--muted)] flex items-center ${labelBorder}`}>
+                      <span className={differ ? 'text-[#facc15]' : ''}>{f.label}</span>
+                    </div>
+                    
+                    <div className={`p-5 ${valBg}`}>
+                      {renderValue(f.key, valA)}
+                    </div>
+                    
+                    <div className={`p-5 ${valBg}`}>
+                      {renderValue(f.key, valB)}
+                    </div>
                   </div>
-                  
-                  {/* Payer A Cell */}
-                  <div className={`p-4 ${valBg}`}>
-                    {renderValue(f.key, valA)}
-                  </div>
-                  
-                  {/* Payer B Cell */}
-                  <div className={`p-4 ${valBg}`}>
-                    {renderValue(f.key, valB)}
-                  </div>
-                </Fragment>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       ) : null}

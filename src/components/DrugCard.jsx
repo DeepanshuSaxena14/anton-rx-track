@@ -1,112 +1,99 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, AlertTriangle, FileText, CheckCircle2 } from 'lucide-react';
 import { CoverageBadge, ScoreDots, HcpcsPill, SiteOfCareTags } from './ui';
 
 export default function DrugCard({ policy, index }) {
   const [expanded, setExpanded] = useState(false);
-  
-  // Cap the delay class at 6 (1 to 6)
   const delayNum = Math.min(index + 1, 6);
   const delayClass = `fade-up-delay-${delayNum}`;
 
   return (
-    <div className={`bg-surface-2 border border-surface-border rounded-xl overflow-hidden fade-up ${delayClass}`}>
+    <div className={`border border-[var(--border)] bg-[var(--bg-2)] p-1 fade-up ${delayClass} rounded-lg transition-colors hover:border-[var(--accent)] group`}>
       <div className="p-4 sm:p-5">
-        {/* Header Row */}
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-6 pb-4 border-b border-[var(--border)]">
           <div>
-            <div className="text-xs font-medium text-brand-400 mb-1">{policy.payer}</div>
-            <div className="flex items-center gap-2 mb-1">
-              <h2 className="font-display text-xl font-bold text-white">{policy.drug_name}</h2>
-              <span className="text-slate-400 font-medium">{policy.brand_name}</span>
+            <div className="text-[10px] font-mono tracking-widest text-[var(--accent)] uppercase mb-2">[{policy.payer}]</div>
+            <div className="flex items-center gap-3">
+              <h2 className="font-display font-light text-2xl text-[var(--fg)] m-0 leading-none">{policy.drug_name}</h2>
+              <span className="font-mono text-xs text-[var(--muted)] uppercase tracking-wider">{policy.brand_name}</span>
               <HcpcsPill code={policy.hcpcs_code} />
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-end gap-3">
             <CoverageBadge status={policy.coverage_status} />
             <ScoreDots score={policy.score} />
           </div>
         </div>
 
-        {/* Info Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 p-3 bg-surface-1 rounded-lg border border-surface-border">
-          <div className="flex items-center gap-2">
-            {policy.pa_required ? (
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-            ) : (
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            )}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-8 mb-6 p-4 border border-[var(--border)] bg-[var(--bg)] rounded">
+          <div className="flex items-center gap-3">
             <div className="text-sm">
-              <span className="text-slate-400 block text-xs">PA Required</span>
-              <span className="font-medium text-slate-200">{policy.pa_required ? 'Yes' : 'No'}</span>
+              <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted)] block mb-1">PA_REQUIRED</span>
+              <span className={`font-mono text-xs uppercase tracking-wider font-semibold ${policy.pa_required ? 'text-rose-400' : 'text-[var(--fg)]'}`}>{policy.pa_required ? 'TRUE' : 'FALSE'}</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            {policy.step_therapy_required ? (
-              <FileText className="h-4 w-4 text-amber-500" />
-            ) : (
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            )}
+          <div className="flex items-center gap-3">
             <div className="text-sm">
-              <span className="text-slate-400 block text-xs">Step Therapy</span>
-              <span className="font-medium text-slate-200">
-                {policy.step_therapy_required ? 'Required' : 'Not Required'}
+              <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted)] block mb-1">STEP_THERAPY</span>
+              <span className={`font-mono text-xs uppercase tracking-wider font-semibold ${policy.step_therapy_required ? 'text-rose-400' : 'text-[var(--fg)]'}`}>
+                {policy.step_therapy_required ? 'REQUIRED' : 'NULL'}
               </span>
             </div>
           </div>
           
           <div className="flex flex-col justify-center">
-            <span className="text-slate-400 block text-xs">Effective Date</span>
-            <span className="font-medium text-slate-200 text-sm">
-              {new Date(policy.effective_date).toLocaleDateString()}
+            <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted)] block mb-1">EFFECTIVE_DATE</span>
+            <span className="font-mono text-xs uppercase tracking-wider text-[var(--fg)] font-semibold">
+              {new Date(policy.effective_date).toISOString().split('T')[0]}
             </span>
           </div>
         </div>
 
-        {/* Site of Care Row */}
         <div>
-          <span className="text-slate-400 block text-xs mb-1.5">Site of Care</span>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted)] block mb-2">SITE_OF_CARE_MATRIX</span>
           {policy.site_of_care && policy.site_of_care.length > 0 ? (
             <SiteOfCareTags sites={policy.site_of_care} />
           ) : (
-            <span className="text-sm text-slate-500">Not specified</span>
+            <span className="font-mono text-xs text-[var(--muted)]">NULL</span>
           )}
         </div>
 
-        {/* Expanded Content */}
         {expanded && (
-          <div className="mt-4 pt-4 border-t border-surface-border space-y-4 animate-in fade-in duration-200">
+          <div className="mt-6 pt-6 border-t border-[var(--border)] space-y-6 animate-in fade-in duration-200">
             <div>
-              <h4 className="text-sm font-semibold text-slate-200 mb-1.5">Covered Indications</h4>
+              <h4 className="font-mono text-[10px] tracking-widest text-[var(--accent)] uppercase mb-3"># INDICATIONS_ARRAY</h4>
               {policy.covered_indications && policy.covered_indications.length > 0 ? (
-                <ul className="list-disc pl-4 text-sm text-slate-300 space-y-1">
+                <ul className="space-y-2">
                   {policy.covered_indications.map((ind, i) => (
-                    <li key={i}>{ind}</li>
+                    <li key={i} className="flex items-start gap-2 text-xs font-mono text-[color-mix(in_srgb,var(--fg)_80%,transparent)] leading-relaxed uppercase">
+                      <span className="text-[var(--accent)] opacity-70">{'>'}</span> {ind}
+                    </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500">None specified.</p>
+                <p className="font-mono text-xs text-[var(--muted)]">NULL</p>
               )}
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold text-slate-200 mb-1.5">PA Criteria</h4>
+              <h4 className="font-mono text-[10px] tracking-widest text-[var(--accent)] uppercase mb-3"># PA_CRITERIA_MATRIX</h4>
               {policy.pa_criteria && policy.pa_criteria.length > 0 ? (
-                <ul className="list-disc pl-4 text-sm text-slate-300 space-y-1">
+                <ul className="space-y-2">
                   {policy.pa_criteria.map((crit, i) => (
-                    <li key={i}>{crit}</li>
+                    <li key={i} className="flex items-start gap-2 text-xs font-mono text-[color-mix(in_srgb,var(--fg)_80%,transparent)] leading-relaxed uppercase">
+                      <span className="text-[var(--accent)] opacity-70">{'>'}</span> {crit}
+                    </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500">None specified.</p>
+                <p className="font-mono text-xs text-[var(--muted)]">NULL</p>
               )}
             </div>
 
             {policy.step_therapy_required && policy.step_therapy_details && (
               <div>
-                <h4 className="text-sm font-semibold text-slate-200 mb-1.5">Step Therapy Details</h4>
-                <p className="text-sm text-slate-300 bg-surface-3 p-2.5 rounded border border-surface-border">
+                <h4 className="font-mono text-[10px] tracking-widest text-rose-400 uppercase mb-3"># STEP_THERAPY_OVERRIDE</h4>
+                <p className="font-mono text-xs text-[var(--fg)] bg-[color-mix(in_srgb,transparent_90%,#f43f5e)] p-4 border border-[color-mix(in_srgb,transparent_70%,#f43f5e)] rounded uppercase">
                   {policy.step_therapy_details}
                 </p>
               </div>
@@ -117,13 +104,9 @@ export default function DrugCard({ policy, index }) {
 
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-surface-1 border-t border-surface-border text-sm font-medium text-brand-400 hover:text-brand-300 hover:bg-surface-3 transition-colors"
+        className="w-full flex items-center justify-center gap-2 py-3 bg-[var(--bg)] border-t border-[var(--border)] text-xs font-mono tracking-widest text-[var(--accent)] hover:text-[var(--bg)] hover:bg-[var(--accent)] transition-colors uppercase rounded-b-md"
       >
-        {expanded ? (
-          <>Hide Details <ChevronUp className="h-4 w-4" /></>
-        ) : (
-          <>Show Details <ChevronDown className="h-4 w-4" /></>
-        )}
+        {expanded ? '[ COLLAPSE ]' : '[ EXPAND_DATA ]'}
       </button>
     </div>
   );

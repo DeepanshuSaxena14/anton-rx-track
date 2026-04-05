@@ -1,100 +1,79 @@
-/* eslint-disable no-unused-vars */
-import { AlertCircle } from 'lucide-react';
+export const Spinner = ({ label, size = 24 }) => (
+  <div className="flex flex-col items-center justify-center space-y-4">
+    <div className="relative" style={{ width: size, height: size }}>
+      <div className="absolute inset-0 border-t-2 border-[var(--accent)] rounded-full animate-spin"></div>
+      <div className="absolute inset-2 border-b-2 border-[var(--fg)] opacity-40 rounded-full animate-spin reverse"></div>
+    </div>
+    {label && <p className="font-mono text-[10px] text-[var(--accent)] uppercase tracking-[0.2em] animate-pulse">{label}</p>}
+  </div>
+);
 
-export function CoverageBadge({ status }) {
-  const styles = {
-    covered: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-    not_covered: 'bg-rose-500/10 text-rose-400 border border-rose-500/20',
-    conditional: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-  };
-  
-  const labels = {
-    covered: 'Covered',
-    not_covered: 'Not Covered',
-    conditional: 'Conditional',
-  };
+export const EmptyState = ({ title, subtitle }) => (
+  <div className="flex flex-col items-center text-center p-8 border border-[var(--border)] bg-[var(--bg-2)] rounded-lg">
+    <div className="w-12 h-12 flex items-center justify-center border border-[var(--border)] bg-[var(--bg)] mb-6 rounded-sm">
+      <span className="font-mono text-xl text-[var(--muted)] opacity-50">?</span>
+    </div>
+    <h3 className="font-mono text-sm tracking-widest text-[var(--fg)] uppercase font-semibold mb-2">{title}</h3>
+    <p className="font-mono text-xs text-[var(--muted)] uppercase tracking-wider">{subtitle}</p>
+  </div>
+);
 
-  if (!status) return null;
+export const CoverageBadge = ({ status }) => {
+  let styles = "bg-[var(--bg)] text-[var(--fg)] border-[var(--border)]";
+  let label = String(status).toUpperCase();
+
+  if (label === 'COVERED' || label === 'PREFERRED' || label === 'COVERED_PREFERRED') {
+    styles = "bg-[color-mix(in_srgb,transparent_80%,#c4a8d4)] text-[var(--accent)] border-[var(--accent)]";
+    label = "COVERED_PREFERRED";
+  } else if (label === 'NOT_COVERED' || label === 'EXCLUDED') {
+    styles = "bg-[color-mix(in_srgb,transparent_80%,#f43f5e)] text-rose-400 border-rose-400";
+    label = "NOT_COVERED";
+  } else if (label === 'RESTRICTED' || label === 'COVERED_WITH_RESTRICTIONS') {
+    styles = "bg-[color-mix(in_srgb,transparent_80%,#facc15)] text-[#facc15] border-[#facc15]";
+    label = "COVERED_WITH_RESTRICTIONS";
+  }
 
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}>
-      {labels[status]}
+    <span className={`inline-flex items-center px-2 py-1 flex-shrink-0 text-[10px] font-mono font-bold tracking-widest border rounded shadow-sm ${styles}`}>
+      {label}
     </span>
   );
-}
+};
 
-export function ScoreDots({ score }) {
-  let color = 'bg-rose-500'; // 7-10
-  if (score <= 3) color = 'bg-emerald-500';
-  else if (score <= 6) color = 'bg-amber-500';
-
+export const ScoreDots = ({ score }) => {
+  const max = 5;
+  const s = Math.min(Math.max(0, score || 0), max);
+  
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex gap-0.5">
-        {[...Array(10)].map((_, i) => (
-          <div
-            key={i}
-            className={`h-2 w-2 rounded-full ${i < score ? color : 'bg-surface-4'}`}
-          />
-        ))}
-      </div>
-      <span className="text-xs font-medium text-slate-300">{score}/10</span>
+    <div className="flex items-center gap-1.5 bg-[var(--bg-2)] px-2 py-1.5 border border-[var(--border)] rounded" title={`RESTRICTION_SCORE: ${s}/${max}`}>
+      {[...Array(max)].map((_, i) => (
+        <div 
+          key={i}
+          className={`w-1.5 h-1.5 rounded-full ${i < s ? 'bg-[var(--accent)] shadow-[0_0_5px_var(--accent)]' : 'bg-[var(--muted)] opacity-30'} transition-opacity`}
+        />
+      ))}
     </div>
   );
-}
+};
 
-export function HcpcsPill({ code }) {
+export const HcpcsPill = ({ code }) => {
   if (!code) return null;
   return (
-    <span className="font-mono text-xs font-medium bg-surface-3 text-slate-300 px-1.5 py-0.5 rounded border border-surface-border">
+    <span className="font-mono text-[9px] uppercase tracking-widest border border-[var(--accent)] text-[var(--accent)] px-2 py-0.5 rounded shadow-sm">
       {code}
     </span>
   );
-}
+};
 
-export function SiteOfCareTags({ sites }) {
+export const SiteOfCareTags = ({ sites }) => {
   if (!sites || sites.length === 0) return null;
-  
-  const labels = {
-    hospital_outpatient: 'Hospital OP',
-    physician_office: 'Physician Office',
-    home_infusion: 'Home Infusion',
-  };
-
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {sites.map((s) => (
-        <span
-          key={s}
-          className="px-2 py-1 text-xs font-medium bg-surface-3 text-slate-300 rounded border border-surface-border"
-        >
-          {labels[s] || s}
+    <div className="flex flex-wrap gap-2">
+      {sites.map((site, i) => (
+        <span key={i} className="font-mono text-[10px] uppercase tracking-wider text-[var(--bg)] bg-[var(--muted)] px-1.5 py-0.5 rounded">
+          {site}
         </span>
       ))}
     </div>
   );
-}
-
-export function Spinner({ label, size = 20 }) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-2">
-      <div
-        className="animate-spin border-2 border-brand-500/30 border-t-brand-500 rounded-full"
-        style={{ width: size, height: size }}
-      />
-      {label && <span className="text-sm text-slate-400">{label}</span>}
-    </div>
-  );
-}
-
-export function EmptyState({ icon: Icon = AlertCircle, title, subtitle }) {
-  return (
-    <div className="flex flex-col items-center justify-center p-8 text-center bg-surface-1 border border-surface-border rounded-xl">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface-3 border border-surface-border mb-4">
-        <Icon className="h-6 w-6 text-slate-400" />
-      </div>
-      <h3 className="text-sm font-semibold text-white mb-1">{title}</h3>
-      {subtitle && <p className="text-sm text-slate-400 max-w-sm">{subtitle}</p>}
-    </div>
-  );
-}
+};

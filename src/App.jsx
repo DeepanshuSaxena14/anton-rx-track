@@ -6,10 +6,13 @@ import Upload from './pages/Upload'
 import Compare from './pages/Compare'
 import Changes from './pages/Changes'
 import ProtectedRoute from './components/ProtectedRoute'
+import AuthCallback from './pages/AuthCallback'
+import Particles from './components/Particles'
 
 export default function App() {
   return (
     <BrowserRouter>
+      <Particles />
       <Nav />
       <main className="min-h-screen pt-14">
         <Routes>
@@ -18,6 +21,7 @@ export default function App() {
           <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
           <Route path="/compare" element={<ProtectedRoute><Compare /></ProtectedRoute>} />
           <Route path="/changes" element={<ProtectedRoute><Changes /></ProtectedRoute>} />
+          <Route path="/callback" element={<AuthCallback />} />
         </Routes>
       </main>
     </BrowserRouter>

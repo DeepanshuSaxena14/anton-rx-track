@@ -1,105 +1,71 @@
-/* eslint-disable no-unused-vars */
-import { NavLink, Link } from 'react-router-dom'
-import { useAuth0 } from '@auth0/auth0-react'
-import {
-  Search,
-  Upload,
-  GitCompare,
-  Clock,
-  Brain,
-} from 'lucide-react'
-
-const linkBase =
-  'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-sm transition-colors sm:px-3'
-
-const navItems = [
-  { to: '/search', label: 'Search', icon: Search },
-  { to: '/upload', label: 'Upload', icon: Upload },
-  { to: '/compare', label: 'Compare', icon: GitCompare },
-  { to: '/changes', label: 'Changes', icon: Clock },
-]
+import { NavLink, useLocation } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
+import { Search, UploadCloud, FileDiff, Activity, LogOut } from 'lucide-react';
 
 export default function Nav() {
-  const { user, isAuthenticated, logout } = useAuth0();
+  const { logout, user } = useAuth0();
+  const location = useLocation();
+
+  if (location.pathname === '/') {
+    return null; // Hidden on home page
+  }
+
+  const handleLogout = () => {
+    logout({ logoutParams: { returnTo: window.location.origin } });
+  };
+
+  const links = [
+    { to: '/search', path: '/search', label: 'Search', icon: Search },
+    { to: '/upload', path: '/upload', label: 'Ingest', icon: UploadCloud },
+    { to: '/compare', path: '/compare', label: 'Compare', icon: FileDiff },
+    { to: '/changes', path: '/changes', label: 'Changes', icon: Activity },
+  ];
 
   return (
-    <header className="fixed top-0 z-50 h-14 w-full border-b border-surface-border bg-surface-0/80 backdrop-blur-md">
-      <div className="relative mx-auto flex h-full max-w-[1600px] items-center justify-between gap-3 px-4">
-        <Link to="/" className="flex min-w-0 shrink-0 items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity group">
-          <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-brand-500/50 bg-surface-2 shadow-sm shadow-brand-500/20"
-            aria-hidden
-          >
-            <Brain className="h-4 w-4 text-brand-400 group-hover:text-brand-300 transition-colors" />
-          </div>
-          <div className="flex items-center">
-            <h1 className="font-display text-xl font-bold tracking-tight text-white leading-none mt-0.5">
-              CoverageIQ
-            </h1>
-          </div>
-        </Link>
+    <nav className="fixed top-0 w-full z-50 bg-[var(--bg)] border-b border-[var(--border)] px-4 h-14 flex items-center justify-between">
+      
+      <div className="flex items-center gap-6">
+        <NavLink to="/" className="group flex items-center gap-2 cursor-pointer border-none bg-transparent hover:opacity-80 transition-opacity flex-shrink-0">
+          <span className="font-display font-semibold italic text-lg text-[var(--accent)] tracking-tight leading-none m-0 pt-1">CoverageIQ</span>
+        </NavLink>
 
-        <nav
-          className="absolute left-1/2 top-1/2 flex max-w-[min(100vw-12rem,42rem)] -translate-x-1/2 -translate-y-1/2 items-center gap-0.5 overflow-x-auto px-1 sm:gap-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-          aria-label="Primary"
-        >
-          {navItems.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              className={({ isActive }) =>
-                [
-                  linkBase,
-                  isActive
-                    ? 'border-brand-500/50 bg-brand-500/15 text-brand-300'
-                    : 'border-transparent text-slate-400 hover:border-surface-border hover:bg-surface-3/50 hover:text-[#e8e8f0]',
-                ].join(' ')
-              }
-            >
-              <Icon className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-              <span className="hidden sm:inline">{label}</span>
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="flex shrink-0 items-center gap-4">
-          <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-200">
-            <span
-              className="relative flex h-2 w-2"
-              aria-hidden
-            >
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
-            </span>
-            Mock mode
-          </span>
-
-          {isAuthenticated && user && (
-            <div className="flex items-center gap-3 pl-4 border-l border-surface-border">
-              <div className="flex items-center gap-2">
-                {user.picture ? (
-                  <img src={user.picture} alt={user.name} className="h-6 w-6 rounded-full" />
-                ) : (
-                  <div className="h-6 w-6 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs font-medium">
-                    {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
-                  </div>
-                )}
-                <span className="text-xs font-medium text-slate-400 max-w-[120px] truncate hidden sm:block">
-                  {user.name || user.email}
-                </span>
-              </div>
-              <button
-                onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-                className="text-xs font-medium text-slate-500 hover:text-red-400 transition-colors"
-                title="Log out"
+        <div className="hidden sm:flex items-center gap-1">
+          {links.map(({ to, label, path, icon: Icon }) => {
+            const isActive = location.pathname.startsWith(path);
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                className={`flex flex-shrink-0 items-center gap-2 px-3 py-1.5 rounded-sm font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                  isActive 
+                    ? 'bg-[var(--bg-2)] text-[var(--accent)] font-bold' 
+                    : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--bg-2)]'
+                }`}
               >
-                Log out
-              </button>
-            </div>
-          )}
+                <Icon className={`w-3 h-3 flex-shrink-0 ${isActive ? 'text-[var(--accent)]' : 'text-[var(--muted)] opacity-60'}`} />
+                {label}
+              </NavLink>
+            );
+          })}
         </div>
       </div>
-    </header>
-  )
+
+      <div className="flex items-center gap-4">
+        {user && (
+           <span className="hidden sm:block font-mono text-[10px] text-[var(--muted)] uppercase tracking-wider truncate max-w-[120px]">
+             USER: <span className="text-[var(--fg)]">{user.name}</span>
+           </span>
+        )}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-[var(--muted)] hover:text-rose-400 transition-colors bg-transparent border-none cursor-pointer flex-shrink-0"
+          title="Log out"
+        >
+          <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="hidden sm:inline">Logout</span>
+        </button>
+      </div>
+
+    </nav>
+  );
 }
