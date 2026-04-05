@@ -1,40 +1,130 @@
-export const Spinner = ({ label, size = 24 }) => (
-  <div className="flex flex-col items-center justify-center space-y-4">
-    <div className="relative" style={{ width: size, height: size }}>
-      <div className="absolute inset-0 border-t-2 border-[var(--accent)] rounded-full animate-spin"></div>
-      <div className="absolute inset-2 border-b-2 border-[var(--fg)] opacity-40 rounded-full animate-spin reverse"></div>
-    </div>
-    {label && <p className="font-mono text-[10px] text-[var(--accent)] uppercase tracking-[0.2em] animate-pulse">{label}</p>}
+const pill = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  padding: '0.2rem 0.75rem',
+  borderRadius: 'var(--radius-pill)',
+  fontSize: '0.7rem',
+  fontFamily: 'var(--font-mono)',
+  fontWeight: 400,
+  letterSpacing: '0.04em',
+  border: '1px solid var(--border-strong)',
+  background: 'var(--bg-3)',
+  color: 'var(--fg-2)',
+};
+
+export const Spinner = ({ label, size = 28 }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        border: '2px solid var(--border-strong)',
+        borderTopColor: 'var(--fg)',
+        animation: 'spin 0.8s linear infinite',
+      }}
+    />
+    {label && (
+      <p
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.65rem',
+          color: 'var(--fg-3)',
+          letterSpacing: '0.15em',
+          textTransform: 'uppercase',
+        }}
+      >
+        {label}
+      </p>
+    )}
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 );
 
 export const EmptyState = ({ title, subtitle }) => (
-  <div className="flex flex-col items-center text-center p-8 border border-[var(--border)] bg-[var(--bg-2)] rounded-lg">
-    <div className="w-12 h-12 flex items-center justify-center border border-[var(--border)] bg-[var(--bg)] mb-6 rounded-sm">
-      <span className="font-mono text-xl text-[var(--muted)] opacity-50">?</span>
+  <div
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      textAlign: 'center',
+      padding: '2.5rem',
+      background: 'var(--bg-2)',
+      border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-card)',
+    }}
+  >
+    <div
+      style={{
+        width: '2.75rem',
+        height: '2.75rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg-3)',
+        border: '1px solid var(--border-strong)',
+        borderRadius: '0.75rem',
+        marginBottom: '1.25rem',
+      }}
+    >
+      <span style={{ fontSize: '1.1rem', color: 'var(--fg-3)', opacity: 0.7 }}>?</span>
     </div>
-    <h3 className="font-mono text-sm tracking-widest text-[var(--fg)] uppercase font-semibold mb-2">{title}</h3>
-    <p className="font-mono text-xs text-[var(--muted)] uppercase tracking-wider">{subtitle}</p>
+    <h3
+      style={{
+        fontFamily: 'var(--font-body)',
+        fontWeight: 500,
+        fontSize: '0.95rem',
+        color: 'var(--fg)',
+        margin: '0 0 0.4rem',
+      }}
+    >
+      {title}
+    </h3>
+    <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--fg-3)', margin: 0 }}>
+      {subtitle}
+    </p>
   </div>
 );
 
 export const CoverageBadge = ({ status }) => {
-  let styles = "bg-[var(--bg)] text-[var(--fg)] border-[var(--border)]";
-  let label = String(status).toUpperCase();
+  const s = String(status || '').toUpperCase();
 
-  if (label === 'COVERED' || label === 'PREFERRED' || label === 'COVERED_PREFERRED') {
-    styles = "bg-[color-mix(in_srgb,transparent_80%,#c4a8d4)] text-[var(--accent)] border-[var(--accent)]";
-    label = "COVERED_PREFERRED";
-  } else if (label === 'NOT_COVERED' || label === 'EXCLUDED') {
-    styles = "bg-[color-mix(in_srgb,transparent_80%,#f43f5e)] text-rose-400 border-rose-400";
-    label = "NOT_COVERED";
-  } else if (label === 'RESTRICTED' || label === 'COVERED_WITH_RESTRICTIONS') {
-    styles = "bg-[color-mix(in_srgb,transparent_80%,#facc15)] text-[#facc15] border-[#facc15]";
-    label = "COVERED_WITH_RESTRICTIONS";
+  let label = s;
+  let bg, color, border;
+
+  if (s === 'COVERED' || s === 'PREFERRED' || s === 'COVERED_PREFERRED') {
+    label = 'Covered';
+    bg = 'rgba(26,122,74,0.08)';
+    color = 'var(--success)';
+    border = 'rgba(26,122,74,0.25)';
+  } else if (s === 'NOT_COVERED' || s === 'EXCLUDED') {
+    label = 'Not Covered';
+    bg = 'rgba(143,42,42,0.07)';
+    color = 'var(--danger)';
+    border = 'rgba(143,42,42,0.2)';
+  } else if (s === 'RESTRICTED' || s === 'COVERED_WITH_RESTRICTIONS') {
+    label = 'Restricted';
+    bg = 'rgba(143,106,26,0.07)';
+    color = 'var(--warning)';
+    border = 'rgba(143,106,26,0.2)';
+  } else {
+    bg = 'var(--bg-3)';
+    color = 'var(--fg-2)';
+    border = 'var(--border-strong)';
   }
 
   return (
-    <span className={`inline-flex items-center px-2 py-1 flex-shrink-0 text-[10px] font-mono font-bold tracking-widest border rounded shadow-sm ${styles}`}>
+    <span
+      style={{
+        ...pill,
+        background: bg,
+        color,
+        border: `1px solid ${border}`,
+        padding: '0.25rem 0.8rem',
+        fontSize: '0.72rem',
+        fontWeight: 500,
+      }}
+    >
       {label}
     </span>
   );
@@ -43,13 +133,28 @@ export const CoverageBadge = ({ status }) => {
 export const ScoreDots = ({ score }) => {
   const max = 5;
   const s = Math.min(Math.max(0, score || 0), max);
-  
   return (
-    <div className="flex items-center gap-1.5 bg-[var(--bg-2)] px-2 py-1.5 border border-[var(--border)] rounded" title={`RESTRICTION_SCORE: ${s}/${max}`}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.3rem',
+        background: 'var(--bg-2)',
+        padding: '0.3rem 0.6rem',
+        borderRadius: 'var(--radius-pill)',
+        border: '1px solid var(--border-strong)',
+      }}
+      title={`Restriction score: ${s}/${max}`}
+    >
       {[...Array(max)].map((_, i) => (
-        <div 
+        <div
           key={i}
-          className={`w-1.5 h-1.5 rounded-full ${i < s ? 'bg-[var(--accent)] shadow-[0_0_5px_var(--accent)]' : 'bg-[var(--muted)] opacity-30'} transition-opacity`}
+          style={{
+            width: '0.375rem',
+            height: '0.375rem',
+            borderRadius: '50%',
+            background: i < s ? 'var(--fg)' : 'var(--bg-4)',
+          }}
         />
       ))}
     </div>
@@ -58,19 +163,15 @@ export const ScoreDots = ({ score }) => {
 
 export const HcpcsPill = ({ code }) => {
   if (!code) return null;
-  return (
-    <span className="font-mono text-[9px] uppercase tracking-widest border border-[var(--accent)] text-[var(--accent)] px-2 py-0.5 rounded shadow-sm">
-      {code}
-    </span>
-  );
+  return <span style={pill}>{code}</span>;
 };
 
 export const SiteOfCareTags = ({ sites }) => {
   if (!sites || sites.length === 0) return null;
   return (
-    <div className="flex flex-wrap gap-2">
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
       {sites.map((site, i) => (
-        <span key={i} className="font-mono text-[10px] uppercase tracking-wider text-[var(--bg)] bg-[var(--muted)] px-1.5 py-0.5 rounded">
+        <span key={i} style={pill}>
           {site}
         </span>
       ))}

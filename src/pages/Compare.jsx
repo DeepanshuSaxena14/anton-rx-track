@@ -1,11 +1,23 @@
-import { useState, useEffect, Fragment } from 'react';
-import { Info, AlertTriangle, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { comparePolicies } from '../api/client';
 import { DRUGS, PAYERS } from '../mocks/mockData';
 import { Spinner, EmptyState, CoverageBadge, ScoreDots, HcpcsPill, SiteOfCareTags } from '../components/ui';
 
-const valuesDiffer = (a, b) => {
-  return JSON.stringify(a) !== JSON.stringify(b);
+const valuesDiffer = (a, b) => JSON.stringify(a) !== JSON.stringify(b);
+
+const selectStyle = {
+  background: 'var(--bg)',
+  border: '1px solid var(--border-strong)',
+  borderRadius: 'var(--radius-pill)',
+  padding: '0.55rem 1rem',
+  fontFamily: 'var(--font-body)',
+  fontSize: '0.85rem',
+  color: 'var(--fg)',
+  outline: 'none',
+  cursor: 'pointer',
+  appearance: 'none',
+  WebkitAppearance: 'none',
 };
 
 export default function Compare() {
@@ -31,177 +43,175 @@ export default function Compare() {
   }, [drug, payerA, payerB]);
 
   const fields = [
-    { key: 'coverage_status', label: 'COVERAGE_STATUS' },
-    { key: 'hcpcs_code', label: 'HCPCS_CODE' },
-    { key: 'pa_required', label: 'PA_REQUIRED' },
-    { key: 'pa_criteria', label: 'PA_CRITERIA' },
-    { key: 'step_therapy_required', label: 'STEP_THERAPY_REQ' },
-    { key: 'step_therapy_details', label: 'STEP_THERAPY_MATRIX' },
-    { key: 'site_of_care', label: 'SITE_OF_CARE' },
-    { key: 'effective_date', label: 'START_DATE' },
-    { key: 'score', label: 'RESTRICTION_SCORE' }
+    { key: 'coverage_status', label: 'Coverage' },
+    { key: 'hcpcs_code', label: 'HCPCS Code' },
+    { key: 'pa_required', label: 'PA Required' },
+    { key: 'pa_criteria', label: 'PA Criteria' },
+    { key: 'step_therapy_required', label: 'Step Therapy' },
+    { key: 'step_therapy_details', label: 'Step Therapy Details' },
+    { key: 'site_of_care', label: 'Site of Care' },
+    { key: 'effective_date', label: 'Effective Date' },
+    { key: 'score', label: 'Restriction Score' },
   ];
 
   const renderValue = (key, value) => {
     if (value === null || value === undefined || value === '') {
-      return <span className="font-mono text-xs text-[var(--muted)] opacity-50">NULL</span>;
+      return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--fg-3)', letterSpacing: '0.05em' }}>—</span>;
     }
-    
     if (key === 'coverage_status') return <CoverageBadge status={value} />;
     if (key === 'hcpcs_code') return <HcpcsPill code={value} />;
     if (key === 'score') return <ScoreDots score={value} />;
     if (key === 'site_of_care') return <SiteOfCareTags sites={value} />;
-    
     if (key === 'pa_required' || key === 'step_therapy_required') {
       return (
-        <span className={`font-mono text-xs uppercase tracking-wider ${value ? 'text-rose-400 font-bold' : 'text-[var(--fg)]'}`}>
-          {value ? 'TRUE' : 'FALSE'}
+        <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: 500, color: value ? 'var(--danger)' : 'var(--fg)' }}>
+          {value ? 'Yes' : 'No'}
         </span>
       );
     }
-    
     if (key === 'effective_date') {
-      return <span className="font-mono text-xs uppercase tracking-wider text-[var(--fg)]">{new Date(value).toISOString().split('T')[0]}</span>;
+      return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'var(--fg-2)' }}>{new Date(value).toISOString().split('T')[0]}</span>;
     }
-    
     if (Array.isArray(value)) {
-      if (value.length === 0) return <span className="font-mono text-xs text-[var(--muted)] opacity-50">NULL_ARRAY</span>;
+      if (value.length === 0) return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--fg-3)' }}>—</span>;
       return (
-        <ul className="space-y-2">
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
           {value.map((item, idx) => (
-            <li key={idx} className="flex items-start gap-2 text-xs font-mono text-[var(--fg)] opacity-80 leading-relaxed uppercase">
-               <span className="text-[var(--accent)]">{'>'}</span>
-               <span>{item}</span>
+            <li key={idx} style={{ display: 'flex', gap: '0.4rem', fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-2)', lineHeight: 1.5 }}>
+              <span style={{ color: 'var(--fg-3)', flexShrink: 0 }}>›</span> {item}
             </li>
           ))}
         </ul>
       );
     }
-    
-    return <span className="font-mono text-xs text-[var(--fg)] bg-[var(--bg)] p-2 rounded border border-[var(--border)] block uppercase">{String(value)}</span>;
+    return <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--fg-2)' }}>{String(value)}</span>;
   };
 
   let diffCount = 0;
-  if (data && data.policyA && data.policyB) {
-    fields.forEach((f) => {
-      if (valuesDiffer(data.policyA[f.key], data.policyB[f.key])) diffCount++;
-    });
+  if (data?.policyA && data?.policyB) {
+    fields.forEach((f) => { if (valuesDiffer(data.policyA[f.key], data.policyB[f.key])) diffCount++; });
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
-      <div className="text-center mb-12 fade-up">
-        <h1 className="font-display text-4xl sm:text-5xl font-light text-[var(--fg)] tracking-tight mb-4">
-          Diff Engine
+    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '5rem 1.5rem 3rem' }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <h1 style={{ fontFamily: 'var(--font-body)', fontWeight: 300, fontSize: 'clamp(2rem, 5vw, 3rem)', color: 'var(--fg)', letterSpacing: '-0.02em', margin: '0 0 0.6rem' }}>
+          Policy Comparison
         </h1>
-        <p className="font-mono text-[var(--accent)] text-sm uppercase tracking-widest max-w-2xl mx-auto">
-          Matrix divergence scan
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.9rem', color: 'var(--fg-3)', margin: 0 }}>
+          Compare coverage rules side-by-side across payers
         </p>
       </div>
 
-      <div className="max-w-4xl mx-auto flex items-start gap-3 p-4 mb-10 bg-[var(--bg-2)] border border-[var(--accent)] rounded fade-up fade-up-delay-1 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-1.5 bg-[var(--accent)] text-[var(--bg)] font-mono text-[10px] uppercase font-bold">INFO</div>
-        <Info className="h-5 w-5 shrink-0 text-[var(--accent)] mt-1" />
-        <p className="leading-relaxed font-mono text-xs text-[var(--fg)] uppercase pr-8 tracking-wide">
-          <strong className="text-[var(--accent)] font-bold">[ NORMALIZED SCHEMA ]:</strong> Internal structures mapped to 12-field standard matrix enabling raw cross-dimensional diff sequence.
+      {/* Info banner */}
+      <div style={{ maxWidth: '700px', margin: '0 auto 2rem', background: 'var(--bg-2)', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: '0.85rem 1.1rem' }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-3)', margin: 0, lineHeight: 1.6 }}>
+          All policies are normalized to a 12-field standard schema before comparison. Differences are highlighted in amber.
         </p>
       </div>
 
-      <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 fade-up fade-up-delay-2 p-6 bg-[var(--bg-2)] border border-[var(--border)] rounded shadow-sm">
-        <div className="flex flex-col gap-2">
-          <label className="font-mono text-[10px] tracking-widest text-[var(--muted)] uppercase"># SELECT_DRUG</label>
-          <select 
-            className="bg-[var(--bg)] border border-[var(--border)] text-[var(--fg)] rounded py-2 px-3 font-mono text-sm focus:outline-none focus:border-[var(--accent)] transition-colors cursor-pointer"
-            value={drug}
-            onChange={(e) => setDrug(e.target.value)}
-          >
-            {DRUGS.map((d) => <option key={d} value={d} className="bg-[var(--bg-2)]">{d}</option>)}
-          </select>
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="font-mono text-[10px] tracking-widest text-[var(--muted)] uppercase"># TARGET_A</label>
-          <select 
-            className="bg-[var(--bg)] border border-[var(--border)] text-[var(--fg)] rounded py-2 px-3 font-mono text-sm focus:outline-none focus:border-[var(--accent)] transition-colors cursor-pointer"
-            value={payerA}
-            onChange={(e) => setPayerA(e.target.value)}
-          >
-            {PAYERS.map((p) => <option key={p} value={p} className="bg-[var(--bg-2)]">{p}</option>)}
-          </select>
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="font-mono text-[10px] tracking-widest text-[var(--muted)] uppercase"># TARGET_B</label>
-          <select 
-            className="bg-[var(--bg)] border border-[var(--border)] text-[var(--fg)] rounded py-2 px-3 font-mono text-sm focus:outline-none focus:border-[var(--accent)] transition-colors cursor-pointer"
-            value={payerB}
-            onChange={(e) => setPayerB(e.target.value)}
-          >
-            {PAYERS.map((p) => <option key={p} value={p} className="bg-[var(--bg-2)]">{p}</option>)}
-          </select>
-        </div>
+      {/* Controls */}
+      <div style={{ maxWidth: '700px', margin: '0 auto 2.5rem', background: 'var(--bg-2)', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-card)', padding: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' }}>
+        {[
+          { label: 'Drug', value: drug, set: setDrug, options: DRUGS },
+          { label: 'Payer A', value: payerA, set: setPayerA, options: PAYERS },
+          { label: 'Payer B', value: payerB, set: setPayerB, options: PAYERS },
+        ].map(({ label, value, set, options }) => (
+          <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>
+              {label}
+            </label>
+            <select value={value} onChange={(e) => set(e.target.value)} style={selectStyle}>
+              {options.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+        ))}
       </div>
 
+      {/* Results */}
       {loading ? (
-        <div className="py-24 fade-up">
-          <Spinner label="EXECUTING DIFF SCAN..." />
+        <div style={{ padding: '5rem 0', display: 'flex', justifyContent: 'center' }}>
+          <Spinner label="Comparing policies..." />
         </div>
       ) : data && (!data.policyA || !data.policyB) ? (
-        <div className="max-w-xl mx-auto py-12 fade-up">
-          <EmptyState 
-            title="DATA MISSING" 
-            subtitle="Selected matrix nodes lack corresponding target payload. Modify parameters." 
-          />
+        <div style={{ maxWidth: '420px', margin: '0 auto' }}>
+          <EmptyState title="No data found" subtitle="No policies found for this combination. Try different parameters." />
         </div>
-      ) : data && data.policyA && data.policyB ? (
-        <div className="max-w-6xl mx-auto fade-up fade-up-delay-3">
-          
+      ) : data?.policyA && data?.policyB ? (
+        <div>
+          {/* Diff count banner */}
           {diffCount > 0 && (
-            <div className="flex items-center justify-center gap-3 mb-6 p-4 bg-[color-mix(in_srgb,transparent_80%,#facc15)] border border-[color-mix(in_srgb,transparent_50%,#facc15)] text-[#facc15] font-mono text-xs font-bold uppercase tracking-widest animate-in fade-in rounded">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              <span>{diffCount} CONFLICTS DETECTED BETWEEN RECORDS</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginBottom: '1.5rem', padding: '0.75rem 1rem', background: 'rgba(143,106,26,0.06)', border: '1px solid rgba(143,106,26,0.15)', borderRadius: 'var(--radius-sm)', color: 'var(--warning)' }}>
+              <AlertTriangle style={{ width: '1rem', height: '1rem', flexShrink: 0 }} />
+              <span style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: '0.85rem' }}>
+                {diffCount} difference{diffCount !== 1 ? 's' : ''} detected
+              </span>
             </div>
           )}
 
-          <div className="flex flex-col border border-[var(--border)] bg-[var(--bg)] rounded overflow-hidden shadow-sm">
-            <div className="grid grid-cols-[160px_1fr_1fr] md:grid-cols-[200px_1fr_1fr] gap-px bg-[var(--border)] border-b border-[var(--border)]">
-              <div className="bg-[var(--bg-2)] p-5"></div>
-              <div className="bg-[var(--bg-2)] p-6 text-center">
-                <div className="text-[10px] font-mono font-bold tracking-widest text-[var(--accent)] mb-2 uppercase">[{data.policyA.payer}]</div>
-                <h3 className="font-display text-2xl tracking-tight text-[var(--fg)] mb-1 uppercase m-0 leading-none">{data.policyA.drug_name}</h3>
-                <span className="font-mono text-[10px] text-[var(--muted)] uppercase tracking-wider block mt-2">{data.policyA.brand_name}</span>
-              </div>
-              <div className="bg-[var(--bg-2)] p-6 text-center">
-                <div className="text-[10px] font-mono font-bold tracking-widest text-rose-400 mb-2 uppercase">[{data.policyB.payer}]</div>
-                <h3 className="font-display text-2xl tracking-tight text-[var(--fg)] mb-1 uppercase m-0 leading-none">{data.policyB.drug_name}</h3>
-                <span className="font-mono text-[10px] text-[var(--muted)] uppercase tracking-wider block mt-2">{data.policyB.brand_name}</span>
-              </div>
-            </div>
-            
-            <div className="flex flex-col gap-px bg-[var(--border)]">
-              {fields.map((f) => {
-                const valA = data.policyA[f.key];
-                const valB = data.policyB[f.key];
-                const differ = valuesDiffer(valA, valB);
-                
-                const valBg = differ ? 'bg-[color-mix(in_srgb,transparent_90%,#facc15)]' : 'bg-[var(--bg)]';
-                const labelBorder = differ ? 'border-l-4 border-l-[#facc15]' : 'border-l-4 border-l-transparent';
-                
-                return (
-                  <div key={f.key} className="grid grid-cols-[160px_1fr_1fr] md:grid-cols-[200px_1fr_1fr] gap-px">
-                    <div className={`p-4 bg-[var(--bg-2)] min-h-[60px] font-mono text-[10px] font-bold tracking-widest text-[var(--muted)] flex items-center ${labelBorder}`}>
-                      <span className={differ ? 'text-[#facc15]' : ''}>{f.label}</span>
-                    </div>
-                    
-                    <div className={`p-5 ${valBg}`}>
-                      {renderValue(f.key, valA)}
-                    </div>
-                    
-                    <div className={`p-5 ${valBg}`}>
-                      {renderValue(f.key, valB)}
-                    </div>
+          {/* Comparison grid */}
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+            {/* Column headers */}
+            <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr 1fr', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ background: 'var(--bg-2)', padding: '1rem' }} />
+              {[data.policyA, data.policyB].map((policy, i) => (
+                <div key={i} style={{ background: 'var(--bg-2)', padding: '1.25rem', textAlign: 'center', borderLeft: '1px solid var(--border)' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-3)', marginBottom: '0.35rem' }}>
+                    {policy.payer}
                   </div>
-                );
-              })}
+                  <div style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: '1rem', color: 'var(--fg)' }}>
+                    {policy.drug_name}
+                  </div>
+                </div>
+              ))}
             </div>
+
+            {/* Field rows */}
+            {fields.map((f) => {
+              const valA = data.policyA[f.key];
+              const valB = data.policyB[f.key];
+              const differ = valuesDiffer(valA, valB);
+              return (
+                <div
+                  key={f.key}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '180px 1fr 1fr',
+                    borderBottom: '1px solid var(--border)',
+                    background: differ ? 'rgba(143,106,26,0.02)' : 'transparent',
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: '1rem',
+                      background: 'var(--bg-2)',
+                      borderLeft: differ ? '2px solid var(--warning)' : '2px solid transparent',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.65rem',
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        color: differ ? 'var(--warning)' : 'var(--fg-3)',
+                        fontWeight: differ ? 500 : 400,
+                      }}
+                    >
+                      {f.label}
+                    </span>
+                  </div>
+                  {[valA, valB].map((val, i) => (
+                    <div key={i} style={{ padding: '1rem 1.25rem', borderLeft: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start' }}>
+                      {renderValue(f.key, val)}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : null}

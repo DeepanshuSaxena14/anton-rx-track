@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search as SearchIcon, SearchX, Sparkles, Send } from 'lucide-react';
+import { Search as SearchIcon, Sparkles, Send } from 'lucide-react';
 import { searchPolicies, queryNL } from '../api/client';
 import DrugCard from '../components/DrugCard';
 import { Spinner, EmptyState } from '../components/ui';
@@ -9,7 +9,6 @@ export default function Search() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-
   const [nlQuestion, setNlQuestion] = useState('');
   const [nlAnswer, setNlAnswer] = useState(null);
   const [nlLoading, setNlLoading] = useState(false);
@@ -17,16 +16,14 @@ export default function Search() {
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!query.trim()) return;
-
     setLoading(true);
     setSearched(true);
     setNlAnswer(null);
-
     try {
       const data = await searchPolicies(query);
       setResults(data);
     } catch (error) {
-      console.error('Error fetching policies:', error);
+      console.error(error);
       setResults([]);
     } finally {
       setLoading(false);
@@ -36,123 +33,242 @@ export default function Search() {
   const handleNLQuery = async (e) => {
     e.preventDefault();
     if (!nlQuestion.trim() || nlLoading) return;
-
     setNlLoading(true);
     try {
       const data = await queryNL(nlQuestion);
       setNlAnswer(data);
     } catch (error) {
-      console.error('Error answering query:', error);
+      console.error(error);
     } finally {
       setNlLoading(false);
     }
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 sm:py-12">
-      <div className="text-center mb-8 fade-up">
-        <h1 className="font-display text-4xl sm:text-5xl font-light text-[var(--fg)] mb-4">
-          Search Algorithm
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '5rem 1.5rem 3rem' }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <h1
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontWeight: 300,
+            fontSize: 'clamp(2rem, 5vw, 3rem)',
+            color: 'var(--fg)',
+            letterSpacing: '-0.02em',
+            margin: '0 0 0.6rem',
+          }}
+        >
+          Policy Search
         </h1>
-        <p className="font-mono text-[var(--muted)] text-sm uppercase tracking-widest max-w-2xl mx-auto">
-          Query engine for medical benefit matrices
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.9rem', color: 'var(--fg-3)', margin: 0 }}>
+          Search across all payers by drug name or HCPCS code
         </p>
       </div>
 
-      <div className="max-w-2xl mx-auto mb-12 fade-up fade-up-delay-1">
-        <form onSubmit={handleSearch} className="relative flex items-center">
-          <SearchIcon className="absolute left-4 h-5 w-5 text-[var(--fg)] opacity-50" />
+      {/* Search bar */}
+      <div style={{ maxWidth: '600px', margin: '0 auto 3rem' }}>
+        <form onSubmit={handleSearch} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <SearchIcon
+            style={{
+              position: 'absolute',
+              left: '1.1rem',
+              width: '1rem',
+              height: '1rem',
+              color: 'var(--fg-3)',
+              pointerEvents: 'none',
+            }}
+          />
           <input
             type="text"
-            className="w-full bg-[var(--bg-2)] border border-[var(--border)] rounded-md py-3 pl-12 pr-32 text-[var(--fg)] font-mono placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-            placeholder="Enter drug designation..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search drug name or HCPCS code..."
+            style={{
+              width: '100%',
+              background: 'var(--bg)',
+              border: '1px solid var(--border-strong)',
+              borderRadius: 'var(--radius-pill)',
+              padding: '0.75rem 8rem 0.75rem 2.75rem',
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.9rem',
+              color: 'var(--fg)',
+              outline: 'none',
+              transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+            }}
+            onFocus={e => {
+              e.target.style.borderColor = 'var(--fg)';
+              e.target.style.boxShadow = '0 0 0 3px rgba(33,34,38,0.08)';
+            }}
+            onBlur={e => {
+              e.target.style.borderColor = 'var(--border-strong)';
+              e.target.style.boxShadow = 'none';
+            }}
           />
           <button
             type="submit"
             disabled={loading || !query.trim()}
-            className="absolute right-1 text-xs font-mono uppercase tracking-widest bg-[var(--accent)] hover:bg-[var(--accent-2)] text-[var(--bg)] px-4 py-2 rounded transition-colors disabled:opacity-30"
+            style={{
+              position: 'absolute',
+              right: '0.35rem',
+              fontFamily: 'var(--font-body)',
+              fontWeight: 500,
+              fontSize: '0.82rem',
+              color: 'var(--bg)',
+              background: 'var(--fg)',
+              padding: '0.55rem 1.25rem',
+              borderRadius: 'var(--radius-pill)',
+              border: 'none',
+              cursor: 'pointer',
+              opacity: loading || !query.trim() ? 0.4 : 1,
+              transition: 'opacity 0.15s ease, background 0.15s ease',
+            }}
           >
-            Execute
+            Search
           </button>
         </form>
       </div>
 
+      {/* Results */}
       {loading ? (
-        <div className="py-20">
-          <Spinner label="INITIALIZING SEARCH ROUTINE..." />
+        <div style={{ padding: '5rem 0', display: 'flex', justifyContent: 'center' }}>
+          <Spinner label="Searching policies..." />
         </div>
       ) : searched && results.length === 0 ? (
-        <div className="fade-up fade-up-delay-2 max-w-md mx-auto mt-8">
+        <div style={{ maxWidth: '420px', margin: '0 auto' }}>
           <EmptyState
-            title="NO RECORDS LOCATED"
-            subtitle={`Query "${query}" returned zero matches in active index.`}
+            title="No results found"
+            subtitle={`No policies matched "${query}". Try a different drug name or payer.`}
           />
         </div>
       ) : searched && results.length > 0 ? (
-        <div className="space-y-8">
-          <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 fade-up mt-8">
-            <h3 className="font-mono text-sm tracking-widest text-[var(--fg)] uppercase">SYS.RESULTS</h3>
-            <span className="text-xs text-[var(--accent)] font-mono tracking-widest bg-[color-mix(in_srgb,var(--accent)_15%,transparent)] border border-[var(--accent)] px-2 py-0.5 rounded">
-              LEN: {results.length}
+        <div>
+          {/* Results header */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderBottom: '1px solid var(--border)',
+              paddingBottom: '0.75rem',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <span style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: '0.9rem', color: 'var(--fg)' }}>
+              {results.length} {results.length === 1 ? 'result' : 'results'}
+            </span>
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.65rem',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: 'var(--fg-3)',
+              }}
+            >
+              for "{query}"
             </span>
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '3rem' }}>
             {results.map((policy, idx) => (
               <DrugCard key={policy.id} policy={policy} index={idx} />
             ))}
           </div>
 
+          {/* NL Ask panel */}
           <div
-            className={`mt-12 bg-[var(--bg-2)] border border-[var(--border)] rounded-lg p-6 fade-up relative group transition-colors hover:border-[var(--accent)]`}
+            style={{
+              background: 'var(--bg-2)',
+              border: '1px solid var(--border-strong)',
+              borderRadius: 'var(--radius-card)',
+              padding: '1.5rem',
+            }}
           >
-            <div className="flex items-center gap-3 mb-6">
-              <Sparkles className="h-4 w-4 text-[var(--accent)]" />
-              <h3 className="font-mono text-sm tracking-widest text-[var(--fg)] uppercase">NLP Analysis Terminal</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
+              <Sparkles style={{ width: '1rem', height: '1rem', color: 'var(--fg-3)' }} />
+              <span style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: '0.9rem', color: 'var(--fg)' }}>
+                Ask a follow-up question
+              </span>
             </div>
 
-            <form onSubmit={handleNLQuery} className="relative flex items-center mb-6">
-              <div className="absolute left-4 font-mono text-[var(--accent)] text-sm">{'>'}</div>
+            <form onSubmit={handleNLQuery} style={{ position: 'relative', display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
               <input
                 type="text"
-                className="w-full bg-[var(--bg)] border border-[var(--border)] rounded py-3 pl-10 pr-12 text-[var(--fg)] font-mono text-sm placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-                placeholder="Submit follow-up parameters..."
                 value={nlQuestion}
                 onChange={(e) => setNlQuestion(e.target.value)}
+                placeholder="e.g. Does Aetna require PA for this drug?"
                 disabled={nlLoading}
+                style={{
+                  width: '100%',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 'var(--radius-pill)',
+                  padding: '0.7rem 3rem 0.7rem 1.25rem',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.87rem',
+                  color: 'var(--fg)',
+                  outline: 'none',
+                }}
+                onFocus={e => {
+                  e.target.style.borderColor = 'var(--fg)';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(33,34,38,0.08)';
+                }}
+                onBlur={e => {
+                  e.target.style.borderColor = 'var(--border-strong)';
+                  e.target.style.boxShadow = 'none';
+                }}
               />
               <button
                 type="submit"
                 disabled={nlLoading || !nlQuestion.trim()}
-                className="absolute right-2 p-2 text-[var(--fg)] opacity-50 hover:opacity-100 hover:text-[var(--accent)] disabled:opacity-20 transition-colors bg-transparent border-none"
+                style={{
+                  position: 'absolute',
+                  right: '0.75rem',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '0.25rem',
+                  color: 'var(--fg-3)',
+                  opacity: nlLoading || !nlQuestion.trim() ? 0.3 : 1,
+                }}
               >
-                {nlLoading ? <Spinner label="" size={16} /> : <Send className="h-4 w-4" />}
+                {nlLoading ? <Spinner size={16} /> : <Send style={{ width: '1rem', height: '1rem' }} />}
               </button>
             </form>
 
             {nlAnswer && (
-              <div className="bg-[var(--bg)] border-l-2 border-[var(--accent)] p-5 animate-in fade-in duration-300">
-                <p className="font-mono text-[13px] leading-relaxed text-[var(--fg)] mb-5">
+              <div
+                style={{
+                  background: 'var(--bg)',
+                  borderLeft: '2px solid var(--fg)',
+                  borderRadius: '0 var(--radius-sm) var(--radius-sm) 0',
+                  padding: '1.1rem 1.25rem',
+                }}
+              >
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.88rem', color: 'var(--fg-2)', lineHeight: 1.65, margin: '0 0 1rem' }}>
                   {nlAnswer.answer}
                 </p>
                 {nlAnswer.sources && nlAnswer.sources.length > 0 && (
                   <div>
-                    <span className="text-[10px] font-mono text-[var(--muted)] uppercase tracking-widest block mb-3 border-b border-[var(--border)] pb-1">
-                      CITATIONS
-                    </span>
-                    <div className="flex flex-wrap gap-2">
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-3)', marginBottom: '0.6rem' }}>
+                      Sources
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                       {nlAnswer.sources.map((src, i) => (
-                        <div
+                        <span
                           key={i}
-                          className="flex flex-col bg-[var(--bg-2)] border border-[var(--border)] rounded px-2 py-1.5 font-mono text-[10px]"
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.65rem',
+                            background: 'var(--bg-3)',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius-pill)',
+                            padding: '0.2rem 0.6rem',
+                            color: 'var(--fg-2)',
+                          }}
                         >
-                          <span className="font-semibold text-[var(--accent)] uppercase tracking-wider">{src.payer}</span>
-                          <span className="text-[var(--muted)]">
-                            {src.drug} // {src.section}
-                          </span>
-                        </div>
+                          {src.payer} · {src.drug}
+                        </span>
                       ))}
                     </div>
                   </div>
