@@ -16,6 +16,7 @@ class PolicyInsert(BaseModel):
     step_therapy_required: bool | None = None
     step_therapy_details: list[str] | None = Field(default_factory=list)
     site_of_care: list[str] | None = Field(default_factory=list)
+    pa_criteria_summary: str | None = None
     effective_date: date | None = None
 
     source_file_name: str | None = None

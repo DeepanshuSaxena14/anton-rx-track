@@ -17,6 +17,7 @@ class PolicyData(BaseModel):
     step_therapy_required: Optional[bool] = None
     step_therapy_details: Optional[List[str]] = None
     site_of_care: Optional[List[str]] = None
+    pa_criteria_summary: Optional[str] = None
     effective_date: Optional[str] = Field(None, description="ISO Format Date String")
 
     @field_validator('covered_indications', 'pa_criteria', 'step_therapy_details', 'site_of_care', mode='before')

@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from typing import List, Dict, Any, Optional
 
 from .llm_client import call_llm
@@ -16,6 +17,7 @@ POLICY_FIELDS = {
     "covered_indications": "string[] | null",
     "pa_required": "boolean | null",
     "pa_criteria": "string[] | null",
+    "pa_criteria_summary": "string | null (concise clinical summary)",
     "step_therapy_required": "boolean | null",
     "step_therapy_details": "string[] | null",
     "site_of_care": "Array of ('hospital_outpatient' | 'physician_office' | 'home_infusion') | null",
@@ -39,6 +41,7 @@ Schema per object:
     "covered_indications": "array of strings | null",
     "pa_required": "boolean | null",
     "pa_criteria": "array of strings | null",
+    "pa_criteria_summary": "string | null (concise 1-2 sentence clinical summary)",
     "step_therapy_required": "boolean | null",
     "step_therapy_details": "array of strings | null",
     "site_of_care": "array of ('hospital_outpatient' | 'physician_office' | 'home_infusion') | null",
@@ -52,8 +55,9 @@ Crucial Constraints:
 4. Standardize `drug_name` strictly to lowercase generic names (e.g., 'rituximab'). Standardize `brand_name` strictly to Title Case (e.g., 'Rituxan').
 5. Normalize `payer` to its primary core recognizable name by stripping trailing corporate entities (e.g., return "Cigna" instead of "Cigna Companies", "UHC" instead of "UnitedHealthcare Insurance", etc.).
 6. For `pa_criteria`: Do NOT copy huge policy sections verbatim. Extract ONLY the specific, decision-focused approval criteria bullets relevant to the current product. Be concise.
-7. For `covered_indications`: Include ONLY the specific indications relevant and approved for the CURRENT product object context, not the entire list of all indications in the document if they do not apply.
-8. Output valid JSON ONLY. No preamble, no explanation, no markdown ticks.
+7. For `pa_criteria_summary`: Generate a high-level, human-readable summary (1-2 sentences) of the medical necessity criteria. Focus on the core requirement (e.g., "Approval requires a diagnosis of rheumatoid arthritis and failure of at least one conventional DMARD").
+8. For `covered_indications`: Include ONLY the specific indications relevant and approved for the CURRENT product object context, not the entire list of all indications in the document if they do not apply.
+9. Output valid JSON ONLY. No preamble, no explanation, no markdown ticks.
 """
 
 def extract_policy(text: str, source_filename: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -78,21 +82,29 @@ def extract_policy(text: str, source_filename: Optional[str] = None) -> List[Dic
 
     content = response.get("content", "")
     
-    # Strip markdown codeblocks if LLM disobeys "no markdown" rule
-    content = content.strip()
-    if content.startswith("```json"):
-        content = content[len("```json"):]
-    if content.startswith("```"):
-        content = content[3:]
-    if content.endswith("```"):
-        content = content[:-3]
-    content = content.strip()
+    # Robustly find the JSON structure within the response (handles preamble/postamble)
+    start_idx = content.find("[")
+    alt_start = content.find("{")
+    if alt_start != -1 and (start_idx == -1 or alt_start < start_idx):
+        start_idx = alt_start
+
+    end_idx = content.rfind("]")
+    alt_end = content.rfind("}")
+    if alt_end != -1 and (end_idx == -1 or alt_end > end_idx):
+        end_idx = alt_end
+
+    if start_idx == -1 or end_idx == -1:
+        logger.error(f"No JSON boundary found in LLM output. Content: {content}")
+        raise ValueError("Extraction yielded no valid JSON structure.")
+
+    # Slice out the core JSON block
+    content = content[start_idx : end_idx + 1]
     
     try:
         parsed_data = json.loads(content)
     except json.JSONDecodeError as e:
-        logger.error(f"LLM returned invalid JSON. Content dump: {content}")
-        raise ValueError("Extraction yielded malformed JSON.") from e
+        logger.error(f"LLM returned invalid JSON block. Content dump: {content}")
+        raise ValueError("Extraction yielded malformed JSON. Please try again.")
 
     # Force array output
     if isinstance(parsed_data, dict):
@@ -117,13 +129,31 @@ def extract_policy(text: str, source_filename: Optional[str] = None) -> List[Dic
             val = obj.get(key, None)
             
             # Additional type coercion for safety
+            expected_type_raw = POLICY_FIELDS.get(key, "string")
+            
+            # Coerce lists into strings if the schema expects a single string (Auto-Flattening)
+            if "string" in expected_type_raw and "[]" not in expected_type_raw and isinstance(val, list):
+                val = ", ".join([str(v) for v in val if v])
+                
+            # Coerce strings into lists if the schema expects an array (Auto-Wrapping)
+            if ("[]" in expected_type_raw or "array" in expected_type_raw or "list" in expected_type_raw) and isinstance(val, str):
+                if val.strip():
+                    # If it looks like a bulleted list in a single string, split it; otherwise wrap it
+                    if "\n" in val or "1." in val or "•" in val:
+                        val = [i.strip().lstrip("•-›").strip() for i in re.split(r'\n|\d+\.|\-|•', val) if i.strip()]
+                    else:
+                        val = [val.strip()]
+                else:
+                    val = None
+
+            # Normalize 'null' strings or empty values
             if isinstance(val, str) and val.strip().lower() == "null":
                 val = None
                 
             if isinstance(val, list) and len(val) == 0:
-                val = None  # Normalize empty arrays to null per P1 standards
+                val = None  # Normalize empty arrays to null per standards
 
-            if val == "":
+            if val == "" or val == []:
                 val = None
 
             cleaned_obj[key] = val
