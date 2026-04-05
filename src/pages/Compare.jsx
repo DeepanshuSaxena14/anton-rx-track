@@ -20,7 +20,11 @@ export default function Compare() {
       setLoading(true);
       try {
         const result = await comparePolicies(drug, payerA, payerB);
-        setData(result);
+        // Map backend list to the policyA/B object format expected by the component
+        setData({
+          policyA: result.comparison?.[0] || null,
+          policyB: result.comparison?.[1] || null
+        });
       } catch (err) {
         console.error(err);
       } finally {

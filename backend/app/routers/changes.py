@@ -1,4 +1,5 @@
 import json
+import uuid
 from fastapi import APIRouter, Query, HTTPException
 
 from app.schemas import ChangesResponse, ChangeSummary, FieldChange
@@ -33,17 +34,25 @@ async def get_changes(
             # P1 converts raw comparison into a human string
             summary_text = p1_diff_summary(json.dumps(old_ver), json.dumps(new_ver))
             
-            # Dummy field computation for the tuple
             changes.append(ChangeSummary(
-                version_old=old_ver.get("version", "v1") if isinstance(old_ver, dict) else "v1",
-                version_new=new_ver.get("version", "v2") if isinstance(new_ver, dict) else "v2",
-                diff_summary=summary_text,
+                id=str(uuid.uuid4()),
+                date=str(new_ver.get("created_at") or new_ver.get("effective_date") or "2024-01-01"),
+                payer=payer,
+                drug=drug_name,
+                type="criteria_changed", 
+                version_old=old_ver.get("version_label", "v1"),
+                version_new=new_ver.get("version_label", "v2"),
+                diff_summary=str(summary_text),
                 field_changes=[
-                    FieldChange(field="pa_criteria", old_value="old", new_value="new")
-                ]
+                    FieldChange(field="policy", old_value="Previous Version", new_value="Updated Version")
+                ],
+                previous=json.dumps(old_ver.get("raw_extraction_json", {})),
+                current=json.dumps(new_ver.get("raw_extraction_json", {}))
             ))
             
         return ChangesResponse(history=changes)
         
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Changes failed: {str(e)}")

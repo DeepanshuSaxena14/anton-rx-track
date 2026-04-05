@@ -24,7 +24,12 @@ export default function Search() {
 
     try {
       const data = await searchPolicies(query);
-      setResults(data);
+      // Map PolicyResult wrapping to the flat object expected by DrugCard
+      const formatted = data.results.map(r => ({
+        ...r.data,
+        id: r.id
+      }));
+      setResults(formatted);
     } catch (error) {
       console.error('Error fetching policies:', error);
       setResults([]);

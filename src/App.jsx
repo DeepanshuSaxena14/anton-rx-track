@@ -5,6 +5,8 @@ import Search from './pages/Search'
 import Upload from './pages/Upload'
 import Compare from './pages/Compare'
 import Changes from './pages/Changes'
+import Leaderboard from './pages/Leaderboard'
+import Appeal from './pages/Appeal'
 import ProtectedRoute from './components/ProtectedRoute'
 import AuthCallback from './pages/AuthCallback'
 import Particles from './components/Particles'
@@ -21,6 +23,8 @@ export default function App() {
           <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
           <Route path="/compare" element={<ProtectedRoute><Compare /></ProtectedRoute>} />
           <Route path="/changes" element={<ProtectedRoute><Changes /></ProtectedRoute>} />
+          <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+          <Route path="/appeal" element={<ProtectedRoute><Appeal /></ProtectedRoute>} />
           <Route path="/callback" element={<AuthCallback />} />
         </Routes>
       </main>

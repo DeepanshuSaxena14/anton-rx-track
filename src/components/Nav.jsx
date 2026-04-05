@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
-import { Search, UploadCloud, FileDiff, Activity, LogOut } from 'lucide-react';
+import { Search, UploadCloud, FileDiff, Activity, LogOut, Trophy, Scale } from 'lucide-react';
 
 export default function Nav() {
   const { logout, user } = useAuth0();
@@ -19,6 +19,8 @@ export default function Nav() {
     { to: '/upload', path: '/upload', label: 'Ingest', icon: UploadCloud },
     { to: '/compare', path: '/compare', label: 'Compare', icon: FileDiff },
     { to: '/changes', path: '/changes', label: 'Changes', icon: Activity },
+    { to: '/leaderboard', path: '/leaderboard', label: 'Scores', icon: Trophy },
+    { to: '/appeal', path: '/appeal', label: 'Appeal', icon: Scale },
   ];
 
   return (

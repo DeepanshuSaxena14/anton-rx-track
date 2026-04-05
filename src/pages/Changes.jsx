@@ -36,8 +36,13 @@ export default function Changes() {
     const fetchChanges = async () => {
       setLoading(true);
       try {
-        const data = await getChanges(filters);
-        setChanges(data);
+        if (filters.drug && filters.payer) {
+          const data = await getChanges(filters);
+          // Backend returns { history: [...] }
+          setChanges(data.history || []);
+        } else {
+          setChanges([]);
+        }
       } catch (error) {
         console.error('Error fetching changes:', error);
       } finally {
@@ -157,7 +162,7 @@ export default function Changes() {
                     </div>
                     
                     <p className="font-mono text-xs text-[var(--muted)] leading-relaxed uppercase">
-                      {change.summary}
+                      {change.diff_summary}
                     </p>
 
                     {isExpanded && (
