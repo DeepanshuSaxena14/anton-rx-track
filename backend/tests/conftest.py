@@ -13,6 +13,15 @@ class MockSupabaseChain:
     def limit(self, *args, **kwargs): return self
     def order(self, *args, **kwargs): return self
     def insert(self, *args, **kwargs): return self
+    def rpc(self, *args, **kwargs): return self
+    
+    # Storage mocks
+    @property
+    def storage(self): return self
+    def from_(self, *args, **kwargs): return self
+    def upload(self, *args, **kwargs): return type("UploadRes", (), {"path": kwargs.get("path", "mock.pdf")})()
+    def get_public_url(self, *args, **kwargs): return f"http://mock-url.com/{args[0]}"
+    
     def execute(self): return self._data_obj
 
 @pytest.fixture
