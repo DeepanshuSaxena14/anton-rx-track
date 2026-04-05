@@ -23,11 +23,11 @@ POLICY_FIELDS = {
 }
 
 SYSTEM_PROMPT = f"""You are an exact clinical policy extractor. Your sole responsibility is to convert raw policy text into a highly structured JSON array.
-NEVER summarize or paraphrase clinical criteria. Extract the exact wording.
+Do not hallucinate facts beyond the source text, but you MUST extract criteria in a concise, compact, and structured manner.
 If a field is not explicitly present in the text, you MUST return `null`. NEVER GUESS.
 
 You MUST return an Array of JSON objects. Even if the text only describes one drug, return an array `[...]`.
-Some PDFs are consolidated and contain multiple completely different drugs and step-therapy policies. In that case, return multiple objects in the array.
+Some PDFs are consolidated and contain multiple distinct drugs or step-therapy policies. Return a separate JSON object for each specific drug/biosimilar.
 
 Schema per object:
 {{
@@ -49,7 +49,11 @@ Crucial Constraints:
 1. `coverage_status` MUST strictly be one of: 'covered', 'not_covered', 'conditional', or null.
 2. `pa_required` and `step_therapy_required` are distinct and separate. Evaluate them independently.
 3. Check headers for `effective_date`. If found, ALWAYS normalize the output to ISO `YYYY-MM-DD` format.
-4. Output valid JSON ONLY. No preamble, no explanation, no markdown ticks.
+4. Standardize `drug_name` strictly to lowercase generic names (e.g., 'rituximab'). Standardize `brand_name` strictly to Title Case (e.g., 'Rituxan').
+5. Normalize `payer` to its primary core recognizable name by stripping trailing corporate entities (e.g., return "Cigna" instead of "Cigna Companies", "UHC" instead of "UnitedHealthcare Insurance", etc.).
+6. For `pa_criteria`: Do NOT copy huge policy sections verbatim. Extract ONLY the specific, decision-focused approval criteria bullets relevant to the current product. Be concise.
+7. For `covered_indications`: Include ONLY the specific indications relevant and approved for the CURRENT product object context, not the entire list of all indications in the document if they do not apply.
+8. Output valid JSON ONLY. No preamble, no explanation, no markdown ticks.
 """
 
 def extract_policy(text: str, source_filename: Optional[str] = None) -> List[Dict[str, Any]]:

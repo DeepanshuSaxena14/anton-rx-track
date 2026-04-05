@@ -61,7 +61,7 @@ def _call_gemini(system_prompt: str, user_prompt: str, temperature: float, respo
         "x-goog-api-key": api_key
     }
     
-    response = requests.post(url, headers=headers, json=payload, timeout=60)
+    response = requests.post(url, headers=headers, json=payload, timeout=300)
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
