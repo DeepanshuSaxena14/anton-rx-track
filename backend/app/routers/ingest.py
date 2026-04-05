@@ -4,6 +4,7 @@ from typing import List
 from app.schemas import IngestResponse
 from app.utils.pdf_extractor import extract_text_and_chunks
 from app.utils.validators import validate_extraction
+from app.ai.summarizer import summarize_document
 from app.services import (
     p2_store_original_pdf,
     p1_extract_policy,
@@ -71,11 +72,15 @@ async def ingest_pdf(file: UploadFile = File(...)):
             score_data = p1_compute_score(policy)
             if i < len(record_ids):
                 p2_store_score(record_ids[i], policy.payer, policy.drug_name, score_data)
-                
+
+        # 12. Generate document summary (soft failure — won't crash pipeline)
+        doc_summary = summarize_document(full_text)
+
         return IngestResponse(
             status="ok",
             message="Ingestion pipeline completed successfully.",
-            policies_extracted=policies_extracted
+            policies_extracted=policies_extracted,
+            document_summary=doc_summary
         )
         
     except Exception as e:

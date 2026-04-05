@@ -35,6 +35,7 @@ class IngestResponse(BaseModel):
     message: str
     policies_extracted: int = 0
     errors: Optional[List[str]] = None
+    document_summary: Optional[str] = None
 
 # Search & Query Router
 class PolicyResult(BaseModel):

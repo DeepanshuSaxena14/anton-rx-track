@@ -8,6 +8,7 @@ export default function Upload() {
   const [status, setStatus] = useState('idle');
   const [result, setResult] = useState(null);
   const [extractedCount, setExtractedCount] = useState(0);
+  const [documentSummary, setDocumentSummary] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const fileInputRef = useRef(null);
@@ -17,6 +18,7 @@ export default function Upload() {
     setStatus('idle');
     setResult(null);
     setExtractedCount(0);
+    setDocumentSummary(null);
     setDragging(false);
     setErrorMsg(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -56,9 +58,16 @@ export default function Upload() {
         setStatus('error');
         return;
       }
-      const extracted = data.policies_extracted || (data.policy ? [data.policy] : []);
-      setExtractedCount(extracted.length);
-      setResult(extracted[0] || null);
+      // policies_extracted is a COUNT (number) from the API, not an array of objects
+      const count = typeof data.policies_extracted === 'number'
+        ? data.policies_extracted
+        : (Array.isArray(data.policies_extracted) ? data.policies_extracted.length : 0);
+      const policyObj = Array.isArray(data.policies_extracted)
+        ? data.policies_extracted[0]
+        : (data.policy || null);
+      setExtractedCount(count);
+      setResult(policyObj);
+      setDocumentSummary(data.document_summary || null);
       setStatus('success');
     } catch (err) {
       console.error(err);
@@ -232,66 +241,126 @@ export default function Upload() {
         </div>
       )}
 
-      {/* Success */}
-      {status === 'success' && result && (
+      {/* Success — show banner + summary always; show fields card only if we have a policy object */}
+      {status === 'success' && (
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
-            <div style={{ width: '3rem', height: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(26,122,74,0.08)', border: '1px solid rgba(26,122,74,0.25)', borderRadius: '50%', marginBottom: '1rem' }}>
-              <CheckCircle style={{ width: '1.3rem', height: '1.3rem', color: 'var(--success)' }} />
+          {/* Success banner */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            padding: '1rem 1.25rem',
+            background: 'rgba(26,122,74,0.06)',
+            border: '1px solid rgba(26,122,74,0.2)',
+            borderRadius: 'var(--radius-card)',
+            marginBottom: '1.75rem',
+          }}>
+            <div style={{ width: '2.25rem', height: '2.25rem', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(26,122,74,0.1)', border: '1px solid rgba(26,122,74,0.25)', borderRadius: '50%' }}>
+              <CheckCircle style={{ width: '1.1rem', height: '1.1rem', color: 'var(--success)' }} />
             </div>
-            <h2 style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: '1.1rem', color: 'var(--success)', margin: '0 0 0.25rem' }}>
-              Extraction complete
-            </h2>
-            {extractedCount > 1 && (
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-3)', margin: 0 }}>
-                {extractedCount} records extracted
+            <div>
+              <p style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--success)', margin: '0 0 0.15rem' }}>
+                Document uploaded &amp; processed successfully
               </p>
-            )}
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--fg-3)', margin: 0 }}>
+                {file?.name} &nbsp;·&nbsp; {extractedCount} {extractedCount === 1 ? 'policy' : 'policies'} extracted
+              </p>
+            </div>
           </div>
 
-          <div style={{ background: 'var(--bg)', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-            {/* Header */}
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
-              <div>
-                <div style={labelStyle}>{result.payer}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-                  <h3 style={{ fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: '1.3rem', color: 'var(--fg)', margin: 0 }}>{result.drug_name}</h3>
-                  {result.brand_name && <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'var(--fg-3)' }}>{result.brand_name}</span>}
-                  <HcpcsPill code={result.hcpcs_code} />
+          {/* Extracted fields card — only shown when API returns a single policy object */}
+          {result && (
+            <div style={{ background: 'var(--bg)', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+              {/* Header */}
+              <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                <div>
+                  <div style={labelStyle}>{result.payer}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                    <h3 style={{ fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: '1.3rem', color: 'var(--fg)', margin: 0 }}>{result.drug_name}</h3>
+                    {result.brand_name && <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem', color: 'var(--fg-3)' }}>{result.brand_name}</span>}
+                    <HcpcsPill code={result.hcpcs_code} />
+                  </div>
                 </div>
+                <CoverageBadge status={result.coverage_status} />
               </div>
-              <CoverageBadge status={result.coverage_status} />
-            </div>
 
-            {/* Fields grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', borderBottom: '1px solid var(--border)' }}>
-              {[
-                { label: 'PA Required', value: result.pa_required ? 'Yes' : 'No', danger: result.pa_required },
-                { label: 'Step Therapy', value: result.step_therapy_required ? 'Required' : 'No', danger: result.step_therapy_required },
-                { label: 'Effective Date', value: result.effective_date ? new Date(result.effective_date).toISOString().split('T')[0] : '—' },
-                { label: 'Site of Care', custom: <SiteOfCareTags sites={result.site_of_care} /> },
-              ].map(({ label, value, danger, custom }) => (
-                <div key={label} style={{ padding: '1rem 1.25rem', borderRight: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
-                  <span style={labelStyle}>{label}</span>
-                  {custom || <span style={{ ...valueStyle, color: danger ? 'var(--danger)' : 'var(--fg)' }}>{value}</span>}
+              {/* Fields grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', borderBottom: '1px solid var(--border)' }}>
+                {[
+                  { label: 'PA Required', value: result.pa_required ? 'Yes' : 'No', danger: result.pa_required },
+                  { label: 'Step Therapy', value: result.step_therapy_required ? 'Required' : 'No', danger: result.step_therapy_required },
+                  { label: 'Effective Date', value: result.effective_date ? new Date(result.effective_date).toISOString().split('T')[0] : '—' },
+                  { label: 'Site of Care', custom: <SiteOfCareTags sites={result.site_of_care} /> },
+                ].map(({ label, value, danger, custom }) => (
+                  <div key={label} style={{ padding: '1rem 1.25rem', borderRight: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+                    <span style={labelStyle}>{label}</span>
+                    {custom || <span style={{ ...valueStyle, color: danger ? 'var(--danger)' : 'var(--fg)' }}>{value}</span>}
+                  </div>
+                ))}
+              </div>
+
+              {/* PA Criteria */}
+              {result.pa_criteria && result.pa_criteria.length > 0 && (
+                <div style={{ padding: '1.25rem 1.5rem' }}>
+                  <span style={labelStyle}>PA Criteria</span>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    {result.pa_criteria.map((c, i) => (
+                      <li key={i} style={{ display: 'flex', gap: '0.5rem', fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--fg-2)', lineHeight: 1.5 }}>
+                        <span style={{ color: 'var(--fg-3)', flexShrink: 0 }}>›</span> {c}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
+              )}
             </div>
+          )}
 
-            {/* PA Criteria */}
-            {result.pa_criteria && result.pa_criteria.length > 0 && (
-              <div style={{ padding: '1.25rem 1.5rem' }}>
-                <span style={labelStyle}>PA Criteria</span>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                  {result.pa_criteria.map((c, i) => (
-                    <li key={i} style={{ display: 'flex', gap: '0.5rem', fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--fg-2)', lineHeight: 1.5 }}>
-                      <span style={{ color: 'var(--fg-3)', flexShrink: 0 }}>›</span> {c}
-                    </li>
-                  ))}
-                </ul>
+          {/* Document Summary Card */}
+          {documentSummary && (
+            <div style={{
+              marginTop: '1.25rem',
+              background: 'var(--bg-2)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-card)',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1.25rem',
+                borderBottom: '1px solid var(--border)',
+                background: 'var(--bg-3)',
+              }}>
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.6rem',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'var(--fg-3)',
+                }}>AI Document Summary</span>
+                <span style={{
+                  marginLeft: 'auto',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.55rem',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: 'var(--fg-3)',
+                  opacity: 0.6,
+                }}>Auto-generated</span>
               </div>
-            )}
-          </div>
+              <p style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.875rem',
+                color: 'var(--fg-2)',
+                lineHeight: 1.7,
+                margin: 0,
+                padding: '1.25rem 1.5rem',
+              }}>
+                {documentSummary}
+              </p>
+            </div>
+          )}
 
           <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
             <button
